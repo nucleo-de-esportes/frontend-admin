@@ -1,5 +1,5 @@
 import Button from "./components/Button";
-import { FaSave, FaTrash } from "react-icons/fa";
+// import { FaSave, FaTrash } from "react-icons/fa";
 import Input from "./components/Input";
 import { z } from "zod";
 import { Select } from "./components/Select";
@@ -52,9 +52,9 @@ function App() {
     { value: "taguatinga", label: "Taguatinga" },
   ];
 
-  const handleNumericInput = (value, setter) => {
-    setter(value.replace(/\D/g, ""));
-  };
+  const replaceChar = (value: string) => {
+    return value.replace(/\D/g, "")
+  }
 
   return (
     <>
@@ -80,13 +80,13 @@ function App() {
         <div className="flex flex-col w-full max-w-[35rem]">
           <p className="font-semibold text-2xl mb-2">Horário</p>
           <div className="flex flex-row gap-4">
-            <Input value={horarioInicio} validation={horaSchema} onChange={(e) => handleNumericInput(e.target.value, setHorarioInicio)} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Início" placeholder="Hora" />
-            <Input value={horarioFim} validation={horaSchema} onChange={(e) => handleNumericInput(e.target.value, setHorarioFim)} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Fim" placeholder="Hora" />
+            <Input value={horarioInicio} validation={horaSchema} onChange={(e) => setHorarioInicio(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Início" placeholder="Hora" />
+            <Input value={horarioFim} validation={horaSchema} onChange={(e) => setHorarioFim(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Fim" placeholder="Hora" />
           </div>
         </div>
         
         <Select minWidth="35rem" value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
-        <Input value={mensalidade} validation={valorSchema} onChange={(e) => handleNumericInput(e.target.value, setMensalidade)} onValidationChange={(isValid) => console.log(isValid)} minWidth="35rem" label="Mensalidade" placeholder="Valor" />
+        <Input value={mensalidade} validation={valorSchema} onChange={(e) => setMensalidade(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="35rem" label="Mensalidade" placeholder="Valor" />
         
         <Button disabled minWidth="21rem" text="Confirmar" onClick={() => console.log("Confirmado!")} />
       </div>

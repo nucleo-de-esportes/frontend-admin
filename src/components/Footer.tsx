@@ -1,4 +1,3 @@
-import React from 'react';
 import Logo from '/Logo_Ceub_Negativa_Lilas.png'; 
 
 const CEUBFooter = () => {

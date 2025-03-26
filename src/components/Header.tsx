@@ -1,4 +1,3 @@
-import React from "react";
 import ceubLogo from "/Logo_Ceub_Negativa_Lilas.png"; 
 
 const Header = () => {
