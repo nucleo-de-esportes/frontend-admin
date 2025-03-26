@@ -12,6 +12,8 @@ function App() {
 
         <Input validation={strSchema} onValidationChange={(isValid: boolean) => console.log(isValid)} minWidth="21rem" label="Mensalidade" placeholder="Valor" />
 
+        <Input type="radio" minWidth="21rem" label="Asa Norte"/>
+
         <Button minWidth="21rem" text="Confirmar" onClick={() => console.log("Confirmado!")} />
 
         <div className="flex gap-4">
