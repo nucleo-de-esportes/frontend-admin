@@ -4,6 +4,7 @@ import Input from "./components/Input";
 import { z } from 'zod';
 import { Select } from "./components/Select";
 import { useState } from "react";
+import Header from "./components/Header"
 
 function App() {
   const strSchema = z.string().max(5)
@@ -19,6 +20,9 @@ function App() {
 
   return (
     <>
+      <header>
+        <Header/>
+      </header>
       <div className='h-screen w-screen flex flex-col items-center gap-4 justify-center'>
 
         {/*TODO: refatorar esse componente*/}
