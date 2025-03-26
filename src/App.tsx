@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Select } from "./components/Select";
 import { useState } from "react";
 import Header from "./components/Header"
+import Footer from "./components/Footer"
 
 function App() {
   const strSchema = z.string().max(5)
@@ -44,6 +45,9 @@ function App() {
         </div>
 
       </div>
+      <footer>
+        <Footer/>
+      </footer>
     </>
   )
 }
