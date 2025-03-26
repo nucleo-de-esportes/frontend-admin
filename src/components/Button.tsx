@@ -19,12 +19,13 @@ const Button = ({ size = 'md', color = '#BF0087', fullWidth = false, ...props }:
         <button
             onClick={props.onClick}
             className={`
+                ${props.className || ''}
+                ${fullWidth ? 'w-full' : ''}
+                ${props.disabled ? 'opacity-60 cursor-not-allowed' : 'hover:scale-102 active:scale-98'}
                 flex items-center justify-center gap-2 text-white ${sizeStyles[size]} 
                 text-lg font-semibold rounded-lg 
                 shadow-md transition-transform transform 
-                hover:scale-102 active:scale-98
                 cursor-pointer
-                ${fullWidth ? 'w-full' : ''}
             `}
             style={{
                 backgroundColor: color,

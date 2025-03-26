@@ -12,7 +12,7 @@ function App() {
 
         <div className="flex gap-4">
           <Button minWidth="10rem" text="Salvar" icon={FaSave} color="#36B37E" onClick={() => console.log("Salvo!")} />
-          <Button minWidth="10rem" text="Remover" icon={FaTrash} color="#D81E5B" onClick={() => console.log("Removido!")} />
+          <Button disabled minWidth="10rem" text="Remover" icon={FaTrash} color="#D81E5B" onClick={() => console.log("Removido!")} />
         </div>
         
       </div>
