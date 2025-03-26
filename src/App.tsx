@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import ClassForm from "./pages/classForm";
+import ClassForm from "./pages/ClassForm";
 
 function App() {
   return (
