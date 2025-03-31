@@ -2,7 +2,7 @@ import Logo from '/Logo_Ceub_Negativa_Lilas.png';
 
 const CEUBFooter = () => {
   return (
-    <footer className="bg-[#43054E] h-24 text-white flex justify-between items-end px-4 py-3">
+    <footer className="bg-[#43054E] h-24 text-white flex w-full justify-between items-end px-4 py-3">
       <div className="text-base ml-[7.5vw]">
         <span>copyright © 2025</span>
       </div>
