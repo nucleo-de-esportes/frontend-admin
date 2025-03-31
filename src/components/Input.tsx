@@ -38,7 +38,7 @@ const Input = ({ type = "text", ...props }: InputProps) => {
                 value={props.value}
                 onChange={handleChange}
                 placeholder={props.placeholder}
-                className="px-4 py-2 text-lg border border-gray-300 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-[#662C9288] focus:border-[#662C9288] placeholder-[#662C9288]"
+                className="w-full px-4 py-2 text-lg border border-gray-300 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-[#662C9288] focus:border-[#662C9288] placeholder-[#662C9288]"
             />
         ),
         radio: () => (
@@ -58,12 +58,12 @@ const Input = ({ type = "text", ...props }: InputProps) => {
 
     return (
         <div 
-            className={`flex ${type === 'text' ? 'flex-col' : 'flex-row'} gap-1`}
+            className={`flex ${type === 'text' ? 'flex-col' : 'flex-row'} gap-1 w-full`}
             style={{
                 minWidth: props.minWidth || 'auto'
             }}
         >
-            {type === 'text' && props.label && <label className="tblock text-2xl font-medium mb-2 text-gray-900">{props.label}</label>}
+            {type === 'text' && props.label && <label className="w-max tblock text-2xl font-medium mb-2 text-gray-900">{props.label}</label>}
             {renderInput()}
             {type === 'text' && error && <span className="text-red-500 text-sm">{error}</span>}
         </div>

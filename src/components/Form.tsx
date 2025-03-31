@@ -17,9 +17,9 @@ const Form = ({ title, children, onSubmit, className = '' }: FormProps) => {
     return (
         <form
             onSubmit={handleSubmit}
-            className={`flex flex-col items-center gap-4 justify-center w-max px-24 py-10 shadow-lg bg-white ${className}`}
+            className={`flex flex-col items-center gap-4 justify-center w-max px-10 md:px-24 py-10 shadow-lg bg-white ${className}`}
         >
-            {title && <h1 className="text-4xl text-[#43054E] font-semibold mb-4">{title}</h1>}
+            {title && <h1 className="text-2xl md:text-4xl text-[#43054E] font-semibold mb-4 text-center">{title}</h1>}
             {children}
         </form>
     );

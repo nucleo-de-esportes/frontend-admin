@@ -59,34 +59,34 @@ const ClassForm = () => {
 
   return (
     <>
-      <div className="flex flex-col items-center bg-[#E4E4E4]">
+      <div className="flex flex-col items-center bg-[#E4E4E4] min-h-screen justify-between">
         <Header />
-        <Form title="CADASTRO DE TURMA">
+        <Form title="CADASTRO DE TURMA" className="w-screen md:w-max">
           <div className="flex flex-col w-full max-w-[35rem]">
             <p className="font-semibold text-2xl mb-2">Campus</p>
-            <div className="flex flex-row gap-4">
+            <div className="flex flex-row flex-wrap gap-4">
               {campusOptions.map((option) => (
-                <Input key={option.value} name="campus" type="radio" minWidth="17rem" label={option.label} value={option.value} />
+                <Input key={option.value} name="campus" type="radio" label={option.label} value={option.value} />
               ))}
             </div>
           </div>
 
-          <Select minWidth="35rem" value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={Modalidades} />
-          <Select minWidth="35rem" value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
-          <Select minWidth="35rem" value={selectedLocal} onChange={setSelectedLocal} label="Local" options={Locais} />
+          <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={Modalidades} />
+          <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
+          <Select  value={selectedLocal} onChange={setSelectedLocal} label="Local" options={Locais} />
 
           <div className="flex flex-col w-full max-w-[35rem]">
             <p className="font-semibold text-2xl mb-2">Horário</p>
-            <div className="flex flex-row gap-4">
+            <div className="flex flex-row flex-wrap gap-4">
               <Input value={horarioInicio} validation={horaSchema} onChange={(e) => setHorarioInicio(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Início" placeholder="Hora" />
               <Input value={horarioFim} validation={horaSchema} onChange={(e) => setHorarioFim(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Fim" placeholder="Hora" />
             </div>
           </div>
 
-          <Select minWidth="35rem" value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
-          <Input value={mensalidade} validation={valorSchema} onChange={(e) => setMensalidade(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="35rem" label="Mensalidade" placeholder="Valor" />
+          <Select value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
+          <Input value={mensalidade} validation={valorSchema} onChange={(e) => setMensalidade(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} label="Mensalidade" placeholder="Valor" />
 
-          <Button disabled minWidth="21rem" text="Confirmar" onClick={() => console.log("Confirmado!")} />
+          <Button disabled text="Confirmar" onClick={() => console.log("Confirmado!")} />
         </Form>
         <Footer />
       </div>

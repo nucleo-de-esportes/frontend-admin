@@ -28,7 +28,7 @@ export function Select({ placeholder = 'Selecione uma opção', disabled = false
     };
 
     return (
-        <div className="relative" style={{ minWidth: props.minWidth || 'auto' }}>
+        <div className="relative w-full" style={{ minWidth: props.minWidth || 'auto' }}>
             {props.label && (
                 <label
                     htmlFor={props.name}
