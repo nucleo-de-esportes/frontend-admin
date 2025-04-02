@@ -64,9 +64,9 @@ const ClassForm = () => {
         <Form title="CADASTRO DE TURMA" className="w-screen md:w-max">
           <div className="flex flex-col w-full max-w-[35rem]">
             <p className="font-semibold text-2xl mb-2">Campus</p>
-            <div className="flex flex-row flex-wrap gap-4">
+            <div className="flex flex-row flex-wrap  justify-between md:justify-start md:gap-40">
               {campusOptions.map((option) => (
-                <Input key={option.value} name="campus" type="radio" label={option.label} value={option.value} />
+                <Input key={option.value} id={option.value} className="max-w-2xs" name="campus" type="radio" label={option.label} value={option.value} />
               ))}
             </div>
           </div>
@@ -75,11 +75,11 @@ const ClassForm = () => {
           <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
           <Select  value={selectedLocal} onChange={setSelectedLocal} label="Local" options={Locais} />
 
-          <div className="flex flex-col w-full max-w-[35rem]">
+          <div className="flex flex-col w-full">
             <p className="font-semibold text-2xl mb-2">Horário</p>
-            <div className="flex flex-row flex-wrap gap-4">
-              <Input value={horarioInicio} validation={horaSchema} onChange={(e) => setHorarioInicio(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Início" placeholder="Hora" />
-              <Input value={horarioFim} validation={horaSchema} onChange={(e) => setHorarioFim(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Fim" placeholder="Hora" />
+            <div className="flex flex-row flex-wrap justify-center gap-4">
+              <Input className="md:max-w-2xs" value={horarioInicio} validation={horaSchema} onChange={(e) => setHorarioInicio(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Início" placeholder="Hora" />
+              <Input className="md:max-w-2xs" value={horarioFim} validation={horaSchema} onChange={(e) => setHorarioFim(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} minWidth="17rem" label="Fim" placeholder="Hora" />
             </div>
           </div>
 
