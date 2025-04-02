@@ -16,6 +16,7 @@ const Button = ({ size = 'md', color = '#BF0087', ...props }: ButtonProps) => {
 
     return (
         <button
+            type="button"
             onClick={props.onClick}
             className={`
                 ${props.className || ''}
