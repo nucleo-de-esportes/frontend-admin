@@ -7,9 +7,11 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Button from "../components/Button";
 import Form from "../components/Form";
+import axios from "axios"
 
 const ClassForm = () => {
   const valorSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(3).refine(value => parseInt(value) >= 0 && parseInt(value) <= 300, "O valor deve estar entre 0 e 300");
+  const limiteSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(2).refine(value => parseInt(value) >= 0 && parseInt(value) <= 30, "A quantidade de alunos deve estar entre 0 e 30");
   const horaSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(2).refine(value => parseInt(value) >= 0 && parseInt(value) <= 24, "A hora deve estar entre 0 e 24");
 
   const [selectedModalidade, setSelectedModalidade] = useState("");
@@ -19,6 +21,8 @@ const ClassForm = () => {
   const [mensalidade, setMensalidade] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
+  const [selectedCampus, setSelectedCampus] = useState("");
+  const [limite, setLimite] = useState("");
 
   const Modalidades = [
     { value: "option1", label: "Opção 1" },
@@ -57,6 +61,27 @@ const ClassForm = () => {
     return value.replace(/\D/g, "")
   }
 
+  const handleSubmit = async () => {
+    try {
+      const json = {
+        horario_inicio: `${horarioInicio}:00`,
+        horario_fim: `${horarioFim}:00`,
+        limite_inscritos: limite,
+        dia_semana: selectedDia,
+        sigla: selectedModalidade,
+        local_id: selectedLocal,
+        modalidade_id: selectedModalidade,
+      };
+      
+      console.log("Tentando enviar json:", json);
+      await axios.post("/cadastrar", json);
+      alert("Cadastro realizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao cadastrar:", error);
+      alert("Erro ao cadastrar a turma.");
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col items-center bg-[#E4E4E4] min-h-screen justify-between">
@@ -66,7 +91,7 @@ const ClassForm = () => {
             <p className="font-semibold text-2xl mb-2">Campus</p>
             <div className="flex flex-row flex-wrap  justify-between md:justify-start md:gap-40">
               {campusOptions.map((option) => (
-                <Input key={option.value} id={option.value} className="max-w-2xs" name="campus" type="radio" label={option.label} value={option.value} />
+                <Input key={option.value} id={option.value} className="max-w-2xs" name="campus" type="radio" label={option.label} value={option.value} onChange={() => setSelectedCampus(option.value)} />
               ))}
             </div>
           </div>
@@ -85,8 +110,8 @@ const ClassForm = () => {
 
           <Select value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
           <Input value={mensalidade} validation={valorSchema} onChange={(e) => setMensalidade(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} label="Mensalidade" placeholder="Valor" />
-
-          <Button disabled text="Confirmar" onClick={() => console.log("Confirmado!")} />
+          <Input value={limite} validation={limiteSchema} onChange={(e) => setLimite(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} label="Limite de Alunos" placeholder="Quantidade" />      
+          <Button text="Confirmar" onClick={handleSubmit}/>
         </Form>
         <Footer />
       </div>
