@@ -74,7 +74,7 @@ const ClassForm = () => {
       };
       
       console.log("Tentando enviar json:", json);
-      await axios.post("/cadastrar", json);
+      await axios.post("/turmas", json);
       alert("Cadastro realizado com sucesso!");
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
