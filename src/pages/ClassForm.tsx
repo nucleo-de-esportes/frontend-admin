@@ -21,7 +21,7 @@ const ClassForm = () => {
   const [mensalidade, setMensalidade] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
-  //const [selectedCampus, setSelectedCampus] = useState("");
+  const [selectedCampus, setSelectedCampus] = useState("");
   const [limite, setLimite] = useState("");
 
   const Modalidades = [
@@ -70,7 +70,7 @@ const ClassForm = () => {
         dia_semana: selectedDia,
         sigla: selectedModalidade,
         local_id: selectedLocal,
-        modalidade_id: selectedModalidade,
+        modalidade_id: selectedCampus,
       };
       
       console.log("Tentando enviar json:", json);
