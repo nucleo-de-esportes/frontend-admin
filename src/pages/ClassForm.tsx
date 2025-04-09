@@ -21,7 +21,7 @@ const ClassForm = () => {
   const [mensalidade, setMensalidade] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
-  const [selectedCampus, setSelectedCampus] = useState("");
+  //const [selectedCampus, setSelectedCampus] = useState("");
   const [limite, setLimite] = useState("");
 
   const Modalidades = [
