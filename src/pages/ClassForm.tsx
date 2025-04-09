@@ -11,6 +11,7 @@ import axios from "axios"
 
 const ClassForm = () => {
   const valorSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(3).refine(value => parseInt(value) >= 0 && parseInt(value) <= 300, "O valor deve estar entre 0 e 300");
+  const limiteSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(2).refine(value => parseInt(value) >= 0 && parseInt(value) <= 30, "A quantidade de alunos deve estar entre 0 e 30");
   const horaSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(2).refine(value => parseInt(value) >= 0 && parseInt(value) <= 24, "A hora deve estar entre 0 e 24");
 
   const [selectedModalidade, setSelectedModalidade] = useState("");
@@ -21,6 +22,7 @@ const ClassForm = () => {
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
   const [selectedCampus, setSelectedCampus] = useState("");
+  const [limite, setLimite] = useState("");
 
   const Modalidades = [
     { value: "option1", label: "Opção 1" },
@@ -64,12 +66,11 @@ const ClassForm = () => {
       const json = {
         horario_inicio: `${horarioInicio}:00`,
         horario_fim: `${horarioFim}:00`,
-        mensalidade: parseInt(mensalidade),
-        dias_de_aula: selectedDia,
-        modalidade: selectedModalidade,
-        campus: selectedCampus,
-        local: selectedLocal,
-        professor: selectedProfessor,
+        limite_inscritos: limite,
+        dia_semana: selectedDia,
+        sigla: selectedModalidade,
+        local_id: selectedLocal,
+        modalidade_id: selectedModalidade,
       };
       
       console.log("Tentando enviar json:", json);
@@ -109,7 +110,7 @@ const ClassForm = () => {
 
           <Select value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
           <Input value={mensalidade} validation={valorSchema} onChange={(e) => setMensalidade(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} label="Mensalidade" placeholder="Valor" />
-
+          <Input value={limite} validation={limiteSchema} onChange={(e) => setLimite(replaceChar(e.target.value))} onValidationChange={(isValid) => console.log(isValid)} label="Limite de Alunos" placeholder="Quantidade" />      
           <Button text="Confirmar" onClick={handleSubmit}/>
         </Form>
         <Footer />
