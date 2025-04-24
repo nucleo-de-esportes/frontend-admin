@@ -39,10 +39,10 @@ const ClassForm = () => {
   ];
 
   const Locais = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
+    { value: "1", label: "Opção 1" },
+    { value: "2", label: "Opção 2" },
+    { value: "3", label: "Opção 3" },
+    { value: "4", label: "Opção 4" },
   ];
 
   const Dias = [
@@ -53,8 +53,8 @@ const ClassForm = () => {
   ];
 
   const campusOptions = [
-    { value: "asaNorte", label: "Asa Norte" },
-    { value: "taguatinga", label: "Taguatinga" },
+    { value: "1", label: "Asa Norte" },
+    { value: "2", label: "Taguatinga" },
   ];
 
   const replaceChar = (value: string) => {
