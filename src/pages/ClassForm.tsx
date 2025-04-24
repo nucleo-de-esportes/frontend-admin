@@ -66,11 +66,11 @@ const ClassForm = () => {
       const json = {
         horario_inicio: `${horarioInicio}:00`,
         horario_fim: `${horarioFim}:00`,
-        limite_inscritos: limite,
+        limite_inscritos: parseInt(limite, 10),
         dia_semana: selectedDia,
         sigla: selectedModalidade,
-        local_id: selectedLocal,
-        modalidade_id: selectedCampus,
+        local_id: parseInt(selectedLocal, 10),
+        modalidade_id: parseInt(selectedCampus, 10),
       };
       
       console.log("Tentando enviar json:", json);
