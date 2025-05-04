@@ -24,7 +24,7 @@ const Button = ({ size = 'md', color = '#BF0087', ...props }: ButtonProps) => {
                 flex items-center justify-center gap-2 text-white ${sizeStyles[size]} 
                 text-lg font-semibold rounded-lg 
                 shadow-md transition-transform transform 
-                cursor-pointer min-w-max w-full sm:w-3/4
+                cursor-pointer min-w-max w-full
             `}
             style={{
                 backgroundColor: color,
