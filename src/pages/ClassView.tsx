@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import ClassCard from '../components/ClassCard';
 import Button from '../components/Button';
 import Title from '../components/Title';
+import FiltroDeTurmas from '../components/FiltroDeTurmas';
 
 import { useIsSmallScreen } from '../hooks/useIsSmallScreen';
 import { useNavigate } from 'react-router-dom';
@@ -37,6 +38,7 @@ export default function ClassView() {
     const navigate = useNavigate();
 
     const [turmas] = useState<Turma[]>(turmasData);
+    const [turmasFiltradas, setTurmasFiltradas] = useState<Turma[]>(turmas);
 
 
     const handleEditar = (turma: Turma): void => {
@@ -61,8 +63,9 @@ export default function ClassView() {
                                 />
                             </div>
                         </div>
+                        <FiltroDeTurmas turmas={turmasData} onChange={(filtradas) => setTurmasFiltradas(filtradas)}/>
                         <div className="space-y-4">
-                            {turmas.map((turma, index) => (
+                            {turmasFiltradas.map((turma, index) => (
                                 <ClassCard
                                     key={index}
                                     turma={turma}
