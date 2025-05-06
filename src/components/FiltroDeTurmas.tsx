@@ -5,6 +5,9 @@ import Button from '../components/Button';
 interface FiltroDeTurmasProps {
     turmas?: Turma[];
     onChange?: (turmasFiltradas: Turma[]) => void;
+    hideButton?: boolean; // Propriedade para controlar se o botão será exibido
+    isOpen?: boolean; // Estado externo para controlar a abertura do filtro
+    onToggleFilter?: (isOpen: boolean) => void; // Callback para atualizar o estado externo
   }
 
 // Definindo a interface para o tipo Turma
@@ -27,10 +30,49 @@ const turmasExemplo: Turma[] = [
   { horario_inicio: '17:00', horario_fim: '18:30', limite_inscritos: 25, dia_semana: 'Sexta', sigla: 'GEO105', local: 'Sala 101', modalidade: 'Online' },
 ];
 
+// Componente para apenas o botão de filtro
+const FilterButton = ({ onClick }: { onClick?: () => void }) => (
+  <Button
+    icon={Filter}
+    text='Filtrar'
+    size="sm"
+    onClick={onClick}
+  />
+);
+
 // Componente principal com tipagem explícita
-export default function FiltroDeTurmas({ turmas = [] as Turma[], onChange }: FiltroDeTurmasProps) {
-  // Estados
-  const [filtroAberto, setFiltroAberto] = useState(false);
+function FiltroDeTurmas({ 
+  turmas = [] as Turma[], 
+  onChange, 
+  hideButton = false,
+  isOpen, 
+  onToggleFilter 
+}: FiltroDeTurmasProps) {
+  // Estados - usando estado interno ou externo dependendo das props
+  const [filtroAbertoInterno, setFiltroAbertoInterno] = useState(false);
+  const filtroAberto = isOpen !== undefined ? isOpen : filtroAbertoInterno;
+  const setFiltroAberto = (estado: boolean) => {
+    if (onToggleFilter) {
+      onToggleFilter(estado);
+    } else {
+      setFiltroAbertoInterno(estado);
+    }
+  };
+
+    // Adicionar listener para evento personalizado quando o componente for montado
+    useEffect(() => {
+      const handleToggleFiltro = () => {
+        setFiltroAberto(!filtroAberto);
+      };
+      
+      document.addEventListener('toggleFiltro', handleToggleFiltro);
+      
+      // Limpar o listener quando o componente for desmontado
+      return () => {
+        document.removeEventListener('toggleFiltro', handleToggleFiltro);
+      };
+    }, [filtroAberto]);
+  
   const [turmasFiltradas, setTurmasFiltradas] = useState<Turma[]>(turmas);
   
   // Definindo as categorias de filtro como union type para garantir type safety
@@ -216,15 +258,18 @@ export default function FiltroDeTurmas({ turmas = [] as Turma[], onChange }: Fil
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <Button
+    <div className="w-full">
+      {/* Botão de filtro - exibido apenas se hideButton for false */}
+      {!hideButton && (
+        <div className="flex justify-end mb-4">
+          <Button
             icon={Filter}
             text='Filtrar'
             size="sm"
             onClick={() => setFiltroAberto(!filtroAberto)}
-        />
-      </div>
+          />
+        </div>
+      )}
 
       {/* Painel de filtros deslizante */}
       <div className={`transition-all duration-300 overflow-hidden ${filtroAberto ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -411,3 +456,19 @@ export default function FiltroDeTurmas({ turmas = [] as Turma[], onChange }: Fil
     </div>
   );
 }
+
+// Adiciona o componente de botão como propriedade estática do componente principal
+FiltroDeTurmas.ButtonOnly = () => (
+  <Button
+    icon={Filter}
+    text='Filtrar'
+    size="sm"
+    onClick={() => {
+      // Encontrar a instância do FiltroDeTurmas e alternar o estado
+      const event = new CustomEvent('toggleFiltro');
+      document.dispatchEvent(event);
+    }}
+  />
+);
+
+export default FiltroDeTurmas;
