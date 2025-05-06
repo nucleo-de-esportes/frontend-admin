@@ -30,16 +30,6 @@ const turmasExemplo: Turma[] = [
   { horario_inicio: '17:00', horario_fim: '18:30', limite_inscritos: 25, dia_semana: 'Sexta', sigla: 'GEO105', local: 'Sala 101', modalidade: 'Online' },
 ];
 
-// Componente para apenas o botão de filtro
-const FilterButton = ({ onClick }: { onClick?: () => void }) => (
-  <Button
-    icon={Filter}
-    text='Filtrar'
-    size="sm"
-    onClick={onClick}
-  />
-);
-
 // Componente principal com tipagem explícita
 function FiltroDeTurmas({ 
   turmas = [] as Turma[], 
