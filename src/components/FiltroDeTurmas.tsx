@@ -447,18 +447,4 @@ function FiltroDeTurmas({
   );
 }
 
-// Adiciona o componente de botão como propriedade estática do componente principal
-FiltroDeTurmas.ButtonOnly = () => (
-  <Button
-    icon={Filter}
-    text='Filtrar'
-    size="sm"
-    onClick={() => {
-      // Encontrar a instância do FiltroDeTurmas e alternar o estado
-      const event = new CustomEvent('toggleFiltro');
-      document.dispatchEvent(event);
-    }}
-  />
-);
-
 export default FiltroDeTurmas;
