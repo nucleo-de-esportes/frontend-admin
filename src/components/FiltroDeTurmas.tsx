@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Filter, X } from 'lucide-react';
-import Button from '../components/Button';
+import { X } from 'lucide-react';
 
 interface FiltroDeTurmasProps {
     turmas?: Turma[];
@@ -34,7 +33,6 @@ const turmasExemplo: Turma[] = [
 function FiltroDeTurmas({ 
   turmas = [] as Turma[], 
   onChange, 
-  hideButton = false,
   isOpen, 
   onToggleFilter 
 }: FiltroDeTurmasProps) {
@@ -249,17 +247,6 @@ function FiltroDeTurmas({
 
   return (
     <div className="w-full">
-      {/* Botão de filtro - exibido apenas se hideButton for false */}
-      {!hideButton && (
-        <div className="flex justify-end mb-4">
-          <Button
-            icon={Filter}
-            text='Filtrar'
-            size="sm"
-            onClick={() => setFiltroAberto(!filtroAberto)}
-          />
-        </div>
-      )}
 
       {/* Painel de filtros deslizante */}
       <div className={`transition-all duration-300 overflow-hidden ${filtroAberto ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
