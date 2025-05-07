@@ -4,12 +4,11 @@ import { X } from 'lucide-react';
 interface FiltroDeTurmasProps {
     turmas?: Turma[];
     onChange?: (turmasFiltradas: Turma[]) => void;
-    hideButton?: boolean; // Propriedade para controlar se o botão será exibido
-    isOpen?: boolean; // Estado externo para controlar a abertura do filtro
-    onToggleFilter?: (isOpen: boolean) => void; // Callback para atualizar o estado externo
+    hideButton?: boolean; 
+    isOpen?: boolean; 
+    onToggleFilter?: (isOpen: boolean) => void; 
   }
 
-// Definindo a interface para o tipo Turma
 interface Turma {
   horario_inicio: string;
   horario_fim: string;
@@ -20,7 +19,6 @@ interface Turma {
   modalidade: string;
 }
 
-// Dados de exemplo para quando não houver turmas
 const turmasExemplo: Turma[] = [
   { horario_inicio: '08:00', horario_fim: '09:30', limite_inscritos: 25, dia_semana: 'Segunda', sigla: 'MAT101', local: 'Sala 101', modalidade: 'Presencial' },
   { horario_inicio: '10:00', horario_fim: '11:30', limite_inscritos: 20, dia_semana: 'Terça', sigla: 'FIS202', local: 'Laboratório', modalidade: 'Híbrida' },
@@ -29,14 +27,12 @@ const turmasExemplo: Turma[] = [
   { horario_inicio: '17:00', horario_fim: '18:30', limite_inscritos: 25, dia_semana: 'Sexta', sigla: 'GEO105', local: 'Sala 101', modalidade: 'Online' },
 ];
 
-// Componente principal com tipagem explícita
 function FiltroDeTurmas({ 
   turmas = [] as Turma[], 
   onChange, 
   isOpen, 
   onToggleFilter 
 }: FiltroDeTurmasProps) {
-  // Estados - usando estado interno ou externo dependendo das props
   const [filtroAbertoInterno, setFiltroAbertoInterno] = useState(false);
   const filtroAberto = isOpen !== undefined ? isOpen : filtroAbertoInterno;
   const setFiltroAberto = (estado: boolean) => {
@@ -47,7 +43,6 @@ function FiltroDeTurmas({
     }
   };
 
-    // Adicionar listener para evento personalizado quando o componente for montado
     useEffect(() => {
       const handleToggleFiltro = () => {
         setFiltroAberto(!filtroAberto);
@@ -55,7 +50,6 @@ function FiltroDeTurmas({
       
       document.addEventListener('toggleFiltro', handleToggleFiltro);
       
-      // Limpar o listener quando o componente for desmontado
       return () => {
         document.removeEventListener('toggleFiltro', handleToggleFiltro);
       };
@@ -63,24 +57,20 @@ function FiltroDeTurmas({
   
   const [turmasFiltradas, setTurmasFiltradas] = useState<Turma[]>(turmas);
   
-  // Definindo as categorias de filtro como union type para garantir type safety
   type FiltroCategorias = 'dias_semana' | 'locais' | 'modalidades' | 'siglas' | 'faixas_horario' | 'capacidades';
 
-  // Interface para as faixas de horário
   interface FaixaHorario {
     label: string;
     inicio: string;
     fim: string;
   }
 
-  // Interface para as faixas de capacidade
   interface FaixaCapacidade {
     label: string;
     min: number;
     max: number;
   }
 
-  // Definindo a interface para as opções de filtro
   interface FiltroOptions {
     dias_semana: string[];
     locais: string[];
@@ -90,24 +80,20 @@ function FiltroDeTurmas({
     capacidades: string[];
   }
 
-  // Faixas de horário pré-definidas
   const faixasHorarioPredefinidas: FaixaHorario[] = [
     { label: 'Manhã (08:00 - 12:00)', inicio: '08:00', fim: '12:00' },
     { label: 'Tarde (12:01 - 18:00)', inicio: '12:01', fim: '18:00' },
     { label: 'Noite (18:01 - 22:00)', inicio: '18:01', fim: '22:00' }
   ];
 
-  // Faixas de capacidade pré-definidas
   const faixasCapacidadePredefinidas: FaixaCapacidade[] = [
     { label: 'Pequena (até 20)', min: 0, max: 20 },
     { label: 'Média (21-30)', min: 21, max: 30 },
     { label: 'Grande (31+)', min: 31, max: 999 }
   ];
 
-  // Determinar quais dados usar para as opções de filtro
   const dadosParaFiltro = turmas.length > 0 ? turmas : turmasExemplo;
 
-  // Opções únicas para cada filtro - recalculadas quando as turmas mudam
   const opcoesUnicas: FiltroOptions = {
     dias_semana: [...new Set(dadosParaFiltro.map(t => t.dia_semana))],
     locais: [...new Set(dadosParaFiltro.map(t => t.local))],
@@ -117,7 +103,6 @@ function FiltroDeTurmas({
     capacidades: faixasCapacidadePredefinidas.map(fc => fc.label)
   };
 
-  // Filtros selecionados
   const [filtros, setFiltros] = useState<FiltroOptions>({
     dias_semana: [],
     locais: [],
@@ -127,14 +112,12 @@ function FiltroDeTurmas({
     capacidades: []
   });
 
-  // Função auxiliar para verificar se um horário está dentro de uma faixa
   const horarioEstaNaFaixa = (horarioInicio: string, horarioFim: string, faixaLabel: string): boolean => {
     const faixa = faixasHorarioPredefinidas.find(f => f.label === faixaLabel);
     if (!faixa) return false;
     
-    // Converter horários para comparação (formato simples HH:MM)
     const converterParaMinutos = (hora: string): number => {
-      const horaFormatada = hora.replace('h', ':'); // substitui 'h' por ':'
+      const horaFormatada = hora.replace('h', ':');
       const [horas, minutos] = horaFormatada.split(':').map(Number);
       return horas * 60 + minutos;
     };
@@ -144,7 +127,6 @@ function FiltroDeTurmas({
     const inicioFaixaMinutos = converterParaMinutos(faixa.inicio);
     const fimFaixaMinutos = converterParaMinutos(faixa.fim);
     
-    // Verifica se há sobreposição entre o horário da turma e a faixa de horário
     return (
       (inicioTurmaMinutos >= inicioFaixaMinutos && inicioTurmaMinutos <= fimFaixaMinutos) ||
       (fimTurmaMinutos >= inicioFaixaMinutos && fimTurmaMinutos <= fimFaixaMinutos) ||
@@ -152,7 +134,6 @@ function FiltroDeTurmas({
     );
   };
 
-  // Função auxiliar para verificar se uma capacidade está dentro de uma faixa
   const capacidadeEstaNaFaixa = (capacidade: number, faixaLabel: string): boolean => {
     const faixa = faixasCapacidadePredefinidas.find(f => f.label === faixaLabel);
     if (!faixa) return false;
@@ -160,10 +141,7 @@ function FiltroDeTurmas({
     return capacidade >= faixa.min && capacidade <= faixa.max;
   };
 
-  // Aplica os filtros quando eles mudam ou quando as turmas mudam
   useEffect(() => {
-    // Se não houver turmas reais, não mostramos nenhuma turma filtrada
-    // mesmo que tenhamos dados de exemplo para as opções de filtro
     if (turmas.length === 0) {
       setTurmasFiltradas([]);
       return;
@@ -171,27 +149,22 @@ function FiltroDeTurmas({
     
     let resultado = turmas;
     
-    // Filtrar por dia da semana
     if (filtros.dias_semana.length > 0) {
       resultado = resultado.filter(t => filtros.dias_semana.includes(t.dia_semana));
     }
     
-    // Filtrar por sigla
     if (filtros.siglas.length > 0) {
       resultado = resultado.filter(t => filtros.siglas.includes(t.sigla));
     }
     
-    // Filtrar por local
     if (filtros.locais.length > 0) {
       resultado = resultado.filter(t => filtros.locais.includes(t.local));
     }
     
-    // Filtrar por modalidade
     if (filtros.modalidades.length > 0) {
       resultado = resultado.filter(t => filtros.modalidades.includes(t.modalidade));
     }
     
-    // Filtrar por faixa de horário
     if (filtros.faixas_horario.length > 0) {
       resultado = resultado.filter(t => 
         filtros.faixas_horario.some(faixa => 
@@ -200,7 +173,6 @@ function FiltroDeTurmas({
       );
     }
     
-    // Filtrar por capacidade
     if (filtros.capacidades.length > 0) {
       resultado = resultado.filter(t => 
         filtros.capacidades.some(faixa => 
@@ -216,16 +188,13 @@ function FiltroDeTurmas({
       }
   }, [filtros, turmas]);
 
-  // Alterna a seleção de um item de filtro
   const toggleFiltro = (categoria: FiltroCategorias, valor: string): void => {
     setFiltros(prevFiltros => {
       const novosFiltros = { ...prevFiltros };
       
       if (novosFiltros[categoria].includes(valor)) {
-        // Remove se já estiver selecionado
         novosFiltros[categoria] = novosFiltros[categoria].filter(item => item !== valor);
       } else {
-        // Adiciona se não estiver selecionado
         novosFiltros[categoria] = [...novosFiltros[categoria], valor];
       }
       
@@ -233,7 +202,6 @@ function FiltroDeTurmas({
     });
   };
 
-  // Limpa todos os filtros
   const limparFiltros = () => {
     setFiltros({
       dias_semana: [],
@@ -248,7 +216,6 @@ function FiltroDeTurmas({
   return (
     <div className="w-full">
 
-      {/* Painel de filtros deslizante */}
       <div className={`transition-all duration-300 overflow-hidden ${filtroAberto ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="bg-gray-100 rounded-lg p-4 mb-4 shadow-md">
           <div className="flex justify-between items-center mb-4">
@@ -270,7 +237,6 @@ function FiltroDeTurmas({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Filtro de Siglas */}
             <div>
               <h3 className="font-medium mb-2">Siglas</h3>
               <div className="flex flex-wrap gap-2">
@@ -290,7 +256,6 @@ function FiltroDeTurmas({
               </div>
             </div>
             
-            {/* Filtro de Dias da Semana */}
             <div>
               <h3 className="font-medium mb-2">Dias da Semana</h3>
               <div className="flex flex-wrap gap-2">
@@ -310,7 +275,6 @@ function FiltroDeTurmas({
               </div>
             </div>
             
-            {/* Filtro de Locais */}
             <div>
               <h3 className="font-medium mb-2">Locais</h3>
               <div className="flex flex-wrap gap-2">
@@ -330,7 +294,6 @@ function FiltroDeTurmas({
               </div>
             </div>
             
-            {/* Filtro de Modalidades */}
             <div>
               <h3 className="font-medium mb-2">Modalidades</h3>
               <div className="flex flex-wrap gap-2">
@@ -350,7 +313,6 @@ function FiltroDeTurmas({
               </div>
             </div>
             
-            {/* Filtro de Faixas de Horário */}
             <div>
               <h3 className="font-medium mb-2">Horários</h3>
               <div className="flex flex-wrap gap-2">
@@ -370,7 +332,6 @@ function FiltroDeTurmas({
               </div>
             </div>
             
-            {/* Filtro de Capacidades */}
             <div>
               <h3 className="font-medium mb-2">Capacidade</h3>
               <div className="flex flex-wrap gap-2">
@@ -391,7 +352,6 @@ function FiltroDeTurmas({
             </div>
           </div>
           
-          {/* Tags mostrando filtros ativos */}
           {Object.entries(filtros).some(([_, valores]) => valores.length > 0) && (
             <div className="mt-4 pt-3 border-t border-gray-300">
               <h3 className="font-medium mb-2">Filtros aplicados:</h3>
@@ -418,7 +378,6 @@ function FiltroDeTurmas({
         </div>
       </div>
       
-      {/* Mensagem de turmas não encontradas */}
       {turmasFiltradas.length === 0 && (
         <div className="bg-gray-100 p-6 rounded-lg text-center">
           <p className="text-gray-600">Nenhuma turma encontrada com os filtros selecionados.</p>
