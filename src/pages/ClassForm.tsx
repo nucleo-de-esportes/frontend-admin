@@ -86,7 +86,7 @@ const ClassForm = () => {
     <>
       <div className="flex flex-col items-center bg-[#E4E4E4] min-h-screen justify-between">
         <Header />
-        <Form title="CADASTRO DE TURMA" className="w-screen md:w-max">
+        <Form title="CADASTRO DE TURMA" className="w-screen">
           <div className="flex flex-col w-full max-w-[35rem]">
             <p className="font-semibold text-2xl mb-2">Campus</p>
             <div className="flex flex-row flex-wrap  justify-between md:justify-start md:gap-40">
