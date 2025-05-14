@@ -8,11 +8,13 @@ import Button from '../components/Button';
 import Title from '../components/Title';
 import FiltroDeTurmas from '../components/FiltroDeTurmas';
 import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 
 import { useIsSmallScreen } from '../hooks/useIsSmallScreen';
 import { useNavigate } from 'react-router-dom';
 
 interface Turma {
+    id?: string | number;
     horario_inicio: string;
     horario_fim: string;
     limite_inscritos: number;
@@ -20,8 +22,9 @@ interface Turma {
     sigla: string;
     local: string;
     modalidade: string;
-    // id?: string | number; // Exemplo
 }
+
+const ITEMS_PER_PAGE = 6; // Define quantas turmas por página
 
 export default function ClassView() {
     const isSmall = useIsSmallScreen();
@@ -32,6 +35,8 @@ export default function ClassView() {
     const [filtroAberto, setFiltroAberto] = useState(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [currentPage, setCurrentPage] = useState<number>(1); //Estado da página atual
 
     // useEffect para buscar os dados quando o componente montar
     useEffect(() => {
@@ -63,7 +68,11 @@ export default function ClassView() {
         fetchTurmas();
     }, []);
 
+    // Função para tentar buscar novamente
     const fetchTurmasAgain = async () => {
+        setLoading(true);
+        setError(null);
+        setCurrentPage(1); // Resetar página ao tentar novamente
         try {
             const apiUrl = import.meta.env.VITE_API_URL;
             if (!apiUrl) {
@@ -88,6 +97,22 @@ export default function ClassView() {
         console.log("Editando turma:", turma);
     };
 
+    // Calcular turmas para a página atual
+    const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+    const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+    const currentTurmasNaPagina = turmasFiltradas.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handlePageChange = (pageNumber: number) => {
+        setCurrentPage(pageNumber);
+        window.scrollTo(0, 0);
+    };
+
+    const handleFilterChange = (filtradas: Turma[]) => {
+        setTurmasFiltradas(filtradas);
+        setCurrentPage(1); // Resetar para a primeira página ao aplicar filtros
+    };
+
+
     if (loading) {
         return (
             <div className="bg-[#E4E4E4] min-h-screen flex flex-col justify-between">
@@ -110,11 +135,7 @@ export default function ClassView() {
                         <p className="text-red-500 mt-4">{error}</p>
                         <Button
                             text="Tentar Novamente"
-                            onClick={() => { // Adiciona uma forma de tentar novamente
-                                setLoading(true); // Ativa o loading para a nova tentativa
-                                setError(null);
-                                fetchTurmasAgain();
-                            }}
+                            onClick={fetchTurmasAgain}
                             size="md"
                             className="mt-6"
                         />
@@ -130,7 +151,7 @@ export default function ClassView() {
             <Header />
 
             <main className="flex-grow bg-gray-100">
-                <div className="max-w-4xl mx-auto bg-white shadow-sm min-h-[calc(100vh-128px)] relative">
+                <div className="max-w-4xl mx-auto bg-white shadow-sm min-h-[calc(100vh-128px)] relative"> {/* Ajustar altura se necessário */}
                     <div className="p-8">
                         <div className="flex items-center justify-between mb-6">
                             <Title title='TURMAS CADASTRADAS' />
@@ -150,31 +171,43 @@ export default function ClassView() {
                             </div>
                         </div>
                         
-                        {/* Passar o estado `turmas` (vindo da API) para o filtro */}
                         <FiltroDeTurmas 
-                            turmas={turmas} 
-                            onChange={(filtradas) => setTurmasFiltradas(filtradas)}
+                            turmas={turmas} // Passa todas as turmas para o filtro poder operar sobre o conjunto completo
+                            onChange={handleFilterChange}
                             hideButton={true}
                             isOpen={filtroAberto}
                             onToggleFilter={(isOpen) => setFiltroAberto(isOpen)}
                         />
                         
-                        {turmasFiltradas.length === 0 && !loading && (
+                        {currentTurmasNaPagina.length === 0 && !loading && ( // Verifica as turmas da página atual
                              <div className="text-center py-10">
-                                <p className="text-gray-500 text-lg">Nenhuma turma encontrada.</p>
-                                <p className="text-gray-400">Tente ajustar os filtros ou cadastrar uma nova turma.</p>
+                                <p className="text-gray-500 text-lg">
+                                    {turmasFiltradas.length > 0 ? 'Nenhuma turma nesta página.' : 'Nenhuma turma encontrada.'}
+                                </p>
+                                <p className="text-gray-400">
+                                    {turmasFiltradas.length > 0 ? 'Tente outra página ou ajuste os filtros.' : 'Tente ajustar os filtros ou cadastrar uma nova turma.'}
+                                </p>
                              </div>
                         )}
 
                         <div className="space-y-4 mt-4">
-                            {turmasFiltradas.map((turma, index) => (
+                            {currentTurmasNaPagina.map((turma, index) => (
                                 <ClassCard
-                                    key={index} // Sugestão: usar um ID da turma como key se disponível
+                                    key={index}
                                     turma={turma}
                                     onEditar={handleEditar}
                                 />
                             ))}
                         </div>
+
+                        {turmasFiltradas.length > ITEMS_PER_PAGE && (
+                            <Pagination
+                                totalItems={turmasFiltradas.length}
+                                itemsPerPage={ITEMS_PER_PAGE}
+                                currentPage={currentPage}
+                                onPageChange={handlePageChange}
+                            />
+                        )}
                     </div>
                 </div>
             </main>
