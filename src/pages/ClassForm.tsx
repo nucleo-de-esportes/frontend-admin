@@ -186,10 +186,13 @@ const ClassForm = () => {
     setHorarioInicio(formattedValue);
     
     if (rawValue !== formattedValue) {
-      setShouldValidateInicio(false);
-      setHorarioInicioError("");
+      setHorarioInicio(formattedValue);
+      if (formattedValue.length === 5) {
+        setShouldValidateInicio(true);
+      }
       return;
     }
+    
     
     if (formattedValue.length === 5) {
       setShouldValidateInicio(true);
@@ -205,10 +208,13 @@ const ClassForm = () => {
     setHorarioFim(formattedValue);
     
     if (rawValue !== formattedValue) {
-      setShouldValidateFim(false);
-      setHorarioFimError("");
+      setHorarioFim(formattedValue);
+      if (formattedValue.length === 5) {
+        setShouldValidateFim(true);
+      }
       return;
     }
+    
     
     if (formattedValue.length === 5) {
       setShouldValidateFim(true);
