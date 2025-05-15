@@ -22,6 +22,7 @@ const ClassForm = () => {
   const [selectedProfessor, setSelectedProfessor] = useState("");
   const [selectedLocal, setSelectedLocal] = useState("");
   const [selectedDia, setSelectedDia] = useState("");
+  const [mensalidade, setMensalidade] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
   const [selectedCampus, setSelectedCampus] = useState("");
@@ -71,34 +72,21 @@ const ClassForm = () => {
 
   // Função de máscara para o formato HH:MM
   const formatTimeInput = (value: string): string => {
-    // Guarda o valor original para comparação
-    const originalValue = value;
+    // Remove tudo que não for dígito, preservando o valor original
+    const onlyDigits = value.replace(/\D/g, "");
     
-    // Remove tudo que não for dígito
-    value = value.replace(/\D/g, "");
+    // Formata para o padrão HH:MM
+    let formatted = onlyDigits;
     
-    // Se a string resultante é igual após remover não-dígitos, não houve alteração de formato
-    const isUnchanged = value.length === originalValue.replace(/:/g, "").length;
-    
-    if (value.length > 4) {
-      value = value.slice(0, 4);
+    if (formatted.length > 4) {
+      formatted = formatted.slice(0, 4);
     }
     
-    if (value.length > 2) {
-      value = value.slice(0, 2) + ":" + value.slice(2);
+    if (formatted.length > 2) {
+      formatted = formatted.slice(0, 2) + ":" + formatted.slice(2);
     }
     
-    // Só aciona a validação se o formato estiver completo E 
-    // não foi apenas uma filtragem de caracteres inválidos
-    if (value.length === 5 && isUnchanged) {
-      return value;
-    } else if (value.length === 5) {
-      // Se houve filtragem de caracteres mas o formato está completo,
-      // retornamos o valor formatado mas não ativamos a validação
-      return value;
-    }
-    
-    return value;
+    return formatted;
   };
 
   // Função para validar se um horário está no formato e intervalo correto
@@ -224,11 +212,20 @@ const ClassForm = () => {
     const onlyNumbersInput = rawValue.replace(/\D/g, "");
     const onlyNumbersFormatted = formattedValue.replace(/:/g, "");
     
-    // Só ativa validação se o formato estiver completo E não foram removidos caracteres
-    if (formattedValue.length === 5 && onlyNumbersInput === onlyNumbersFormatted) {
+    // Detecta se houve input de caractere inválido
+    const hadInvalidChar = rawValue.length > formattedValue.replace(/:/g, "").length + 1; // +1 para contar os dois pontos
+    
+    // Se detectou input inválido, sempre desativa a validação
+    if (rawValue !== formattedValue) {
+      setShouldValidateInicio(false);
+      setHorarioInicioError("");
+      return;
+    }
+    
+    // Só ativa validação se o formato estiver completo
+    if (formattedValue.length === 5) {
       setShouldValidateInicio(true);
-    } else if (formattedValue !== rawValue) {
-      // Se houve remoção de caracteres inválidos, não mostra erro
+    } else {
       setShouldValidateInicio(false);
       setHorarioInicioError("");
     }
@@ -243,11 +240,20 @@ const ClassForm = () => {
     const onlyNumbersInput = rawValue.replace(/\D/g, "");
     const onlyNumbersFormatted = formattedValue.replace(/:/g, "");
     
-    // Só ativa validação se o formato estiver completo E não foram removidos caracteres
-    if (formattedValue.length === 5 && onlyNumbersInput === onlyNumbersFormatted) {
+    // Detecta se houve input de caractere inválido
+    const hadInvalidChar = rawValue.length > formattedValue.replace(/:/g, "").length + 1; // +1 para contar os dois pontos
+    
+    // Se detectou input inválido, sempre desativa a validação
+    if (rawValue !== formattedValue) {
+      setShouldValidateFim(false);
+      setHorarioFimError("");
+      return;
+    }
+    
+    // Só ativa validação se o formato estiver completo
+    if (formattedValue.length === 5) {
       setShouldValidateFim(true);
-    } else if (formattedValue !== rawValue) {
-      // Se houve remoção de caracteres inválidos, não mostra erro
+    } else {
       setShouldValidateFim(false);
       setHorarioFimError("");
     }
