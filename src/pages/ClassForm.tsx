@@ -12,28 +12,19 @@ import React from "react";
 const ClassForm = () => {
   const limiteSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(2).refine(value => parseInt(value) >= 0 && parseInt(value) <= 30, "A quantidade de alunos deve estar entre 0 e 30");
   
-  // Esquema de validação aprimorado para horários
-  const horaSchema = z.string()
-    .refine(value => value === "" || /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(value), {
-      message: "Formato de hora inválido.",
-    });
-
   const [selectedModalidade, setSelectedModalidade] = useState("");
   const [selectedProfessor, setSelectedProfessor] = useState("");
   const [selectedLocal, setSelectedLocal] = useState("");
   const [selectedDia, setSelectedDia] = useState("");
-  const [mensalidade, setMensalidade] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
   const [selectedCampus, setSelectedCampus] = useState("");
   const [limite, setLimite] = useState("");
   const [horarioError, setHorarioError] = useState("");
   
-  // Estados para controlar erros específicos de cada campo de horário
   const [horarioInicioError, setHorarioInicioError] = useState("");
   const [horarioFimError, setHorarioFimError] = useState("");
   
-  // Estados para controlar a validação
   const [shouldValidateInicio, setShouldValidateInicio] = useState(false);
   const [shouldValidateFim, setShouldValidateFim] = useState(false);
 
@@ -70,12 +61,9 @@ const ClassForm = () => {
     { value: "2", label: "Taguatinga" },
   ];
 
-  // Função de máscara para o formato HH:MM
   const formatTimeInput = (value: string): string => {
-    // Remove tudo que não for dígito, preservando o valor original
     const onlyDigits = value.replace(/\D/g, "");
     
-    // Formata para o padrão HH:MM
     let formatted = onlyDigits;
     
     if (formatted.length > 4) {
@@ -89,21 +77,17 @@ const ClassForm = () => {
     return formatted;
   };
 
-  // Função para validar se um horário está no formato e intervalo correto
   const validateTime = (time: string): boolean => {
-    // Verifica se o formato está correto (HH:MM)
     if (!/^([0-9]{2}):([0-9]{2})$/.test(time)) {
       return false;
     }
     
     const [hours, minutes] = time.split(":").map(Number);
     
-    // Verifica se as horas estão entre 0 e 23
     if (hours < 0 || hours > 23) {
       return false;
     }
     
-    // Verifica se os minutos estão entre 0 e 59
     if (minutes < 0 || minutes > 59) {
       return false;
     }
@@ -111,9 +95,7 @@ const ClassForm = () => {
     return true;
   };
 
-  // Verificação de horários válidos e se o fim é maior que o início
   useEffect(() => {
-    // Validar o formato e intervalo do horário de início
     if (shouldValidateInicio && horarioInicio) {
       if (horarioInicio.length === 5) {
         if (!validateTime(horarioInicio)) {
@@ -125,8 +107,7 @@ const ClassForm = () => {
     } else {
       setHorarioInicioError("");
     }
-    
-    // Validar o formato e intervalo do horário de fim
+
     if (shouldValidateFim && horarioFim) {
       if (horarioFim.length === 5) {
         if (!validateTime(horarioFim)) {
@@ -139,7 +120,6 @@ const ClassForm = () => {
       setHorarioFimError("");
     }
     
-    // Verificar se o horário de fim é maior que o de início
     if (shouldValidateInicio && shouldValidateFim && horarioInicio && horarioFim) {
       if (horarioInicio.length === 5 && horarioFim.length === 5) {
         if (validateTime(horarioInicio) && validateTime(horarioFim)) {
@@ -162,11 +142,9 @@ const ClassForm = () => {
   }, [horarioInicio, horarioFim, shouldValidateInicio, shouldValidateFim, horarioInicioError, horarioFimError]);
 
   const handleSubmit = async () => {
-    // Força a validação ao enviar
     setShouldValidateInicio(true);
     setShouldValidateFim(true);
     
-    // Verifica erros nos horários
     if (horarioInicio.length === 5 && !validateTime(horarioInicio)) {
       alert("Horário de início inválido. Use valores entre 00:00 e 23:59");
       return;
@@ -177,7 +155,6 @@ const ClassForm = () => {
       return;
     }
     
-    // Valida se o horário fim é maior que o horário início antes de enviar
     if (horarioError) {
       alert(horarioError);
       return;
@@ -208,21 +185,12 @@ const ClassForm = () => {
     const formattedValue = formatTimeInput(rawValue);
     setHorarioInicio(formattedValue);
     
-    // Verifica se caracteres foram removidos durante a formatação
-    const onlyNumbersInput = rawValue.replace(/\D/g, "");
-    const onlyNumbersFormatted = formattedValue.replace(/:/g, "");
-    
-    // Detecta se houve input de caractere inválido
-    const hadInvalidChar = rawValue.length > formattedValue.replace(/:/g, "").length + 1; // +1 para contar os dois pontos
-    
-    // Se detectou input inválido, sempre desativa a validação
     if (rawValue !== formattedValue) {
       setShouldValidateInicio(false);
       setHorarioInicioError("");
       return;
     }
     
-    // Só ativa validação se o formato estiver completo
     if (formattedValue.length === 5) {
       setShouldValidateInicio(true);
     } else {
@@ -236,21 +204,12 @@ const ClassForm = () => {
     const formattedValue = formatTimeInput(rawValue);
     setHorarioFim(formattedValue);
     
-    // Verifica se caracteres foram removidos durante a formatação
-    const onlyNumbersInput = rawValue.replace(/\D/g, "");
-    const onlyNumbersFormatted = formattedValue.replace(/:/g, "");
-    
-    // Detecta se houve input de caractere inválido
-    const hadInvalidChar = rawValue.length > formattedValue.replace(/:/g, "").length + 1; // +1 para contar os dois pontos
-    
-    // Se detectou input inválido, sempre desativa a validação
     if (rawValue !== formattedValue) {
       setShouldValidateFim(false);
       setHorarioFimError("");
       return;
     }
     
-    // Só ativa validação se o formato estiver completo
     if (formattedValue.length === 5) {
       setShouldValidateFim(true);
     } else {
@@ -285,7 +244,6 @@ const ClassForm = () => {
                   <Input 
                     className="w-full" 
                     value={horarioInicio} 
-                    validation={shouldValidateInicio ? horaSchema : z.string()}
                     onChange={handleHorarioInicioChange} 
                     onValidationChange={(isValid) => console.log("Início valid:", isValid)} 
                     minWidth="17rem" 
@@ -302,7 +260,6 @@ const ClassForm = () => {
                   <Input 
                     className="w-full" 
                     value={horarioFim} 
-                    validation={shouldValidateFim ? horaSchema : z.string()}
                     onChange={handleHorarioFimChange} 
                     onValidationChange={(isValid) => console.log("Fim valid:", isValid)} 
                     minWidth="17rem" 
