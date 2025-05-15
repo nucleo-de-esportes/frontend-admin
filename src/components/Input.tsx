@@ -39,6 +39,7 @@ const Input = ({ type = "text", ...props }: InputProps) => {
                 type="text"
                 value={props.value}
                 onChange={handleChange}
+                onBlur={props.onBlur}
                 placeholder={props.placeholder}
                 className={`w-full px-4 py-2 text-lg border border-gray-300 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-[#662C9288] focus:border-[#662C9288] placeholder-[#662C9288] ${props.className}`}
             />

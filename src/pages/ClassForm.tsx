@@ -224,6 +224,20 @@ const ClassForm = () => {
     }
   };
 
+  const handleHorarioInicioBlur = () => {
+    setShouldValidateInicio(true);
+    if (horarioInicio.length !== 5 || !validateTime(horarioInicio)) {
+      setHorarioInicioError("Horário inválido.");
+    }
+  };
+  
+  const handleHorarioFimBlur = () => {
+    setShouldValidateFim(true);
+    if (horarioFim.length !== 5 || !validateTime(horarioFim)) {
+      setHorarioFimError("Horário inválido.");
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col items-center bg-[#E4E4E4] min-h-screen justify-between">
@@ -250,7 +264,8 @@ const ClassForm = () => {
                   <Input 
                     className="w-full" 
                     value={horarioInicio} 
-                    onChange={handleHorarioInicioChange} 
+                    onChange={handleHorarioInicioChange}
+                    onBlur={handleHorarioInicioBlur} 
                     onValidationChange={(isValid) => console.log("Início valid:", isValid)} 
                     minWidth="17rem" 
                     label="Início" 
@@ -266,7 +281,8 @@ const ClassForm = () => {
                   <Input 
                     className="w-full" 
                     value={horarioFim} 
-                    onChange={handleHorarioFimChange} 
+                    onChange={handleHorarioFimChange}
+                    onBlur={handleHorarioFimBlur} 
                     onValidationChange={(isValid) => console.log("Fim valid:", isValid)} 
                     minWidth="17rem" 
                     label="Fim" 
