@@ -248,7 +248,7 @@ export default function ClassView() {
         }
 
         // Salvar o PDF
-        doc.save('turmas.pdf');
+        doc.save(`turmas-${new Date()}`);
     };
 
     if (loading) {
