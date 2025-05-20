@@ -18,7 +18,6 @@ const ClassForm = () => {
   const [selectedDia, setSelectedDia] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
-  const [selectedCampus, setSelectedCampus] = useState("");
   const [limite, setLimite] = useState("");
   const [horarioError, setHorarioError] = useState("");
   
@@ -29,10 +28,10 @@ const ClassForm = () => {
   const [shouldValidateFim, setShouldValidateFim] = useState(false);
 
   const Modalidades = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
+    { value: "1", label: "Opção 1" },
+    { value: "2", label: "Opção 2" },
+    { value: "3", label: "Opção 3" },
+    { value: "4", label: "Opção 4" },
   ];
 
   const Professores = [
@@ -54,11 +53,6 @@ const ClassForm = () => {
     { value: "option2", label: "Opção 2" },
     { value: "option3", label: "Opção 3" },
     { value: "option4", label: "Opção 4" },
-  ];
-
-  const campusOptions = [
-    { value: "1", label: "Asa Norte" },
-    { value: "2", label: "Taguatinga" },
   ];
 
   const formatTimeInput = (value: string): string => {
@@ -168,7 +162,7 @@ const ClassForm = () => {
         dia_semana: selectedDia,
         sigla: selectedModalidade,
         local_id: parseInt(selectedLocal, 10),
-        modalidade_id: parseInt(selectedCampus, 10),
+        modalidade_id: parseInt(selectedModalidade, 10),
       };
       
       console.log("Tentando enviar json:", json);
@@ -243,14 +237,6 @@ const ClassForm = () => {
       <div className="flex flex-col items-center bg-[#E4E4E4] min-h-screen justify-between">
         <Header />
         <Form title="CADASTRO DE TURMA" className="w-screen">
-          <div className="flex flex-col w-full max-w-[35rem]">
-            <p className="font-semibold text-2xl mb-2">Campus</p>
-            <div className="flex flex-row flex-wrap  justify-between md:justify-start md:gap-40">
-              {campusOptions.map((option) => (
-                <Input key={option.value} id={option.value} className="max-w-2xs" name="campus" type="radio" label={option.label} value={option.value} onChange={() => setSelectedCampus(option.value)} />
-              ))}
-            </div>
-          </div>
 
           <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={Modalidades} />
           <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
