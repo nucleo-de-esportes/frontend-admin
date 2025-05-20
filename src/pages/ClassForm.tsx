@@ -1,5 +1,4 @@
 import Input from "../components/Input";
-import { z } from "zod";
 import { Select } from "../components/Select";
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
@@ -10,8 +9,6 @@ import axios from "axios"
 import React from "react";
 
 const ClassForm = () => {
-  const limiteSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(2).refine(value => parseInt(value) >= 0 && parseInt(value) <= 30, "A quantidade de alunos deve estar entre 0 e 30");
-  
   const [selectedModalidade, setSelectedModalidade] = useState("");
   const [selectedProfessor, setSelectedProfessor] = useState("");
   const [selectedLocal, setSelectedLocal] = useState("");
@@ -23,9 +20,11 @@ const ClassForm = () => {
   
   const [horarioInicioError, setHorarioInicioError] = useState("");
   const [horarioFimError, setHorarioFimError] = useState("");
+  const [limiteError, setLimiteError] = useState("");
   
   const [shouldValidateInicio, setShouldValidateInicio] = useState(false);
   const [shouldValidateFim, setShouldValidateFim] = useState(false);
+  const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
 
   const Modalidades = [
     { value: "1", label: "Opção 1" },
@@ -89,6 +88,23 @@ const ClassForm = () => {
     return true;
   };
 
+  const validateLimite = (value: string): string => {
+    if (!value) {
+      return "Campo obrigatório";
+    }
+    
+    const num = parseInt(value);
+    if (isNaN(num)) {
+      return "Apenas números são permitidos";
+    }
+    
+    if (num < 5 || num > 30) {
+      return "A quantidade de alunos deve estar entre 5 e 30";
+    }
+    
+    return "";
+  };
+
   useEffect(() => {
     if (shouldValidateInicio && horarioInicio) {
       if (horarioInicio.length === 5) {
@@ -135,9 +151,20 @@ const ClassForm = () => {
     }
   }, [horarioInicio, horarioFim, shouldValidateInicio, shouldValidateFim, horarioInicioError, horarioFimError]);
 
+  // Validação do limite
+  useEffect(() => {
+    if (shouldValidateLimite) {
+      const error = validateLimite(limite);
+      setLimiteError(error);
+    } else {
+      setLimiteError("");
+    }
+  }, [limite, shouldValidateLimite]);
+
   const handleSubmit = async () => {
     setShouldValidateInicio(true);
     setShouldValidateFim(true);
+    setShouldValidateLimite(true);
     
     if (horarioInicio.length === 5 && !validateTime(horarioInicio)) {
       alert("Horário de início inválido. Use valores entre 00:00 e 23:59");
@@ -151,6 +178,12 @@ const ClassForm = () => {
     
     if (horarioError) {
       alert(horarioError);
+      return;
+    }
+
+    const limiteValidationError = validateLimite(limite);
+    if (limiteValidationError) {
+      alert(limiteValidationError);
       return;
     }
     
@@ -232,6 +265,27 @@ const ClassForm = () => {
     }
   };
 
+  const handleLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+    if (value.length <= 2) { // Permite apenas até 2 caracteres
+      setLimite(value);
+      
+      // Se o usuário digitou 2 caracteres, valida automaticamente
+      if (value.length === 2) {
+        setShouldValidateLimite(true);
+      } else {
+        // Se ainda está digitando, não valida
+        setShouldValidateLimite(false);
+        setLimiteError("");
+      }
+    }
+  };
+
+  const handleLimiteBlur = () => {
+    // Valida quando o campo perde o foco
+    setShouldValidateLimite(true);
+  };
+
   return (
     <>
       <div className="flex flex-col items-center bg-[#E4E4E4] min-h-screen justify-between">
@@ -290,7 +344,23 @@ const ClassForm = () => {
           </div>
 
           <Select value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
-          <Input value={limite} validation={limiteSchema} onChange={(e) => setLimite(e.target.value.replace(/\D/g, ""))} onValidationChange={(isValid) => console.log(isValid)} label="Limite de Alunos" placeholder="Quantidade" />      
+          
+          <div className="flex flex-col w-full">
+            <Input 
+              value={limite} 
+              onChange={handleLimiteChange} 
+              onBlur={handleLimiteBlur}
+              onValidationChange={(isValid) => console.log(isValid)} 
+              label="Limite de Alunos" 
+              placeholder="Quantidade" 
+            />
+            {limiteError && (
+              <div className="text-red-500 text-sm mt-1">
+                {limiteError}
+              </div>
+            )}
+          </div>
+          
           <Button text="Confirmar" onClick={handleSubmit}/>
         </Form>
         <Footer />
