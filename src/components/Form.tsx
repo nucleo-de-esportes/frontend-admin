@@ -3,7 +3,7 @@ import Title from './Title';
 
 interface FormProps {
     title?: string;
-    children: ReactNode;
+    children?: ReactNode;
     onSubmit?: (e: FormEvent<HTMLFormElement>) => void;
     className?: string;
 }
