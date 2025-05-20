@@ -18,7 +18,7 @@ const Form = ({ title, children, onSubmit, className = '' }: FormProps) => {
     return (
         <form
             onSubmit={handleSubmit}
-            className={`flex flex-col items-center gap-4 justify-center max-w-4xl px-10 md:px-24 py-10 shadow-lg bg-white ${className}`}
+            className={`flex flex-col items-center gap-4 justify-center max-w-full px-10 md:px-24 py-10 ${className}`}
         >
             {title && <Title title={title} className='mb-4'/>}
             {children}
