@@ -86,7 +86,7 @@ const UserRegister = () => {
                     label="Email"
                     placeholder="E-mail"
                     name="email"
-                    type="email"
+                    type="text"
                     value={formData.email}
                     onChange={handleInputChange}
                 />
