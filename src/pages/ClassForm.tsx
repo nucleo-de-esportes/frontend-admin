@@ -26,13 +26,23 @@ const ClassForm = () => {
   const [shouldValidateFim, setShouldValidateFim] = useState(false);
   const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
 
-  const Modalidades = [
-    { value: "1", label: "Opção 1" },
-    { value: "2", label: "Opção 2" },
-    { value: "3", label: "Opção 3" },
-    { value: "4", label: "Opção 4" },
-  ];
+  const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
+  const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
 
+  useEffect(() => {
+    axios.get<{ modalidade_id: number; nome: string; valor: number }[]>('/cad/mod')
+      .then(response => {
+        const formatted = response.data.map(mod => ({
+          value: mod.modalidade_id.toString(),
+          label: mod.nome
+        }));
+        setModalidadeOptions(formatted);
+      })
+      .catch(error => {
+        console.error('Erro ao carregar modalidades:', error);
+      });
+  }, []);
+  
   const Professores = [
     { value: "option1", label: "Opção 1" },
     { value: "option2", label: "Opção 2" },
@@ -40,12 +50,19 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
-  const Locais = [
-    { value: "1", label: "Opção 1" },
-    { value: "2", label: "Opção 2" },
-    { value: "3", label: "Opção 3" },
-    { value: "4", label: "Opção 4" },
-  ];
+  useEffect(() => {
+    axios.get<{ local_id: number; nome: string; campus: string }[]>('/cad/local')
+      .then(response => {
+        const formatted = response.data.map(loc => ({
+          value: loc.local_id.toString(),
+          label: loc.nome
+        }));
+        setLocalOptions(formatted);
+      })
+      .catch(error => {
+        console.error('Erro ao carregar locais:', error);
+      });
+  }, []);
 
   const Dias = [
     { value: "option1", label: "Opção 1" },
@@ -292,9 +309,9 @@ const ClassForm = () => {
         <Header />
         <Form title="CADASTRO DE TURMA" className="w-screen">
 
-          <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={Modalidades} />
+          <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={modalidadeOptions} />
           <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
-          <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={Locais} />
+          <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={localOptions} />
 
           <div className="flex flex-col w-full">
             <p className="font-semibold text-2xl mb-2">Horário</p>
