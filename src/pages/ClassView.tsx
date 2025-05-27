@@ -87,6 +87,7 @@ export default function ClassView() {
 
     const handleEditar = (turma: Turma): void => {
         console.log("Editando turma:", turma);
+        navigate(`/cadastro/turma`)
     };
 
     // Função para dividir texto longo em múltiplas linhas
