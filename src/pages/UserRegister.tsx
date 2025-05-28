@@ -6,6 +6,8 @@ import Form from "../components/Form";
 import Input from "../components/Input";
 import MainContainer from "../components/MainContainer";
 
+const emailValidationSchema = z.string().email("E-mail inválido");
+
 const passwordValidationSchema = z.string()
     .min(8, "Mínimo de 8 caracteres")
     .regex(/[A-Z]/, "Mínimo de 1 letra maiúscula")
@@ -58,6 +60,7 @@ const UserRegister = () => {
                     name="email"
                     type="text"
                     value={formData.email}
+                    validation={emailValidationSchema}
                     onChange={handleInputChange}
                 />
 
