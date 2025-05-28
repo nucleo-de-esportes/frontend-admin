@@ -1,5 +1,4 @@
 import Input from "../components/Input";
-import { z } from "zod";
 import { Select } from "../components/Select";
 import { useState, useEffect } from "react";
 import Button from "../components/Button";
@@ -9,30 +8,39 @@ import React from "react";
 import MainContainer from "../components/MainContainer";
 
 const ClassForm = () => {
-  const limiteSchema = z.string().regex(/^\d*$/, "Apenas números são permitidos").max(2).refine(value => parseInt(value) >= 0 && parseInt(value) <= 30, "A quantidade de alunos deve estar entre 0 e 30");
-
   const [selectedModalidade, setSelectedModalidade] = useState("");
   const [selectedProfessor, setSelectedProfessor] = useState("");
   const [selectedLocal, setSelectedLocal] = useState("");
   const [selectedDia, setSelectedDia] = useState("");
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
-  const [selectedCampus, setSelectedCampus] = useState("");
   const [limite, setLimite] = useState("");
   const [horarioError, setHorarioError] = useState("");
 
   const [horarioInicioError, setHorarioInicioError] = useState("");
   const [horarioFimError, setHorarioFimError] = useState("");
+  const [limiteError, setLimiteError] = useState("");
 
   const [shouldValidateInicio, setShouldValidateInicio] = useState(false);
   const [shouldValidateFim, setShouldValidateFim] = useState(false);
+  const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
 
-  const Modalidades = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
-  ];
+  const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
+  const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
+
+  useEffect(() => {
+    axios.get<{ modalidade_id: number; nome: string; valor: number }[]>('/cad/mod')
+      .then(response => {
+        const formatted = response.data.map(mod => ({
+          value: mod.modalidade_id.toString(),
+          label: mod.nome
+        }));
+        setModalidadeOptions(formatted);
+      })
+      .catch(error => {
+        console.error('Erro ao carregar modalidades:', error);
+      });
+  }, []);
 
   const Professores = [
     { value: "option1", label: "Opção 1" },
@@ -41,23 +49,25 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
-  const Locais = [
-    { value: "1", label: "Opção 1" },
-    { value: "2", label: "Opção 2" },
-    { value: "3", label: "Opção 3" },
-    { value: "4", label: "Opção 4" },
-  ];
+  useEffect(() => {
+    axios.get<{ local_id: number; nome: string; campus: string }[]>('/cad/local')
+      .then(response => {
+        const formatted = response.data.map(loc => ({
+          value: loc.local_id.toString(),
+          label: loc.nome
+        }));
+        setLocalOptions(formatted);
+      })
+      .catch(error => {
+        console.error('Erro ao carregar locais:', error);
+      });
+  }, []);
 
   const Dias = [
     { value: "option1", label: "Opção 1" },
     { value: "option2", label: "Opção 2" },
     { value: "option3", label: "Opção 3" },
     { value: "option4", label: "Opção 4" },
-  ];
-
-  const campusOptions = [
-    { value: "1", label: "Asa Norte" },
-    { value: "2", label: "Taguatinga" },
   ];
 
   const formatTimeInput = (value: string): string => {
@@ -92,6 +102,23 @@ const ClassForm = () => {
     }
 
     return true;
+  };
+
+  const validateLimite = (value: string): string => {
+    if (!value) {
+      return "Campo obrigatório";
+    }
+
+    const num = parseInt(value);
+    if (isNaN(num)) {
+      return "Apenas números são permitidos";
+    }
+
+    if (num < 5 || num > 30) {
+      return "A quantidade de alunos deve estar entre 5 e 30";
+    }
+
+    return "";
   };
 
   useEffect(() => {
@@ -140,9 +167,20 @@ const ClassForm = () => {
     }
   }, [horarioInicio, horarioFim, shouldValidateInicio, shouldValidateFim, horarioInicioError, horarioFimError]);
 
+  // Validação do limite
+  useEffect(() => {
+    if (shouldValidateLimite) {
+      const error = validateLimite(limite);
+      setLimiteError(error);
+    } else {
+      setLimiteError("");
+    }
+  }, [limite, shouldValidateLimite]);
+
   const handleSubmit = async () => {
     setShouldValidateInicio(true);
     setShouldValidateFim(true);
+    setShouldValidateLimite(true);
 
     if (horarioInicio.length === 5 && !validateTime(horarioInicio)) {
       alert("Horário de início inválido. Use valores entre 00:00 e 23:59");
@@ -159,6 +197,12 @@ const ClassForm = () => {
       return;
     }
 
+    const limiteValidationError = validateLimite(limite);
+    if (limiteValidationError) {
+      alert(limiteValidationError);
+      return;
+    }
+
     try {
       const json = {
         horario_inicio: horarioInicio,
@@ -167,7 +211,7 @@ const ClassForm = () => {
         dia_semana: selectedDia,
         sigla: selectedModalidade,
         local_id: parseInt(selectedLocal, 10),
-        modalidade_id: parseInt(selectedCampus, 10),
+        modalidade_id: parseInt(selectedModalidade, 10),
       };
 
       console.log("Tentando enviar json:", json);
@@ -237,21 +281,34 @@ const ClassForm = () => {
     }
   };
 
+  const handleLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+    if (value.length <= 2) { // Permite apenas até 2 caracteres
+      setLimite(value);
+
+      // Se o usuário digitou 2 caracteres, valida automaticamente
+      if (value.length === 2) {
+        setShouldValidateLimite(true);
+      } else {
+        // Se ainda está digitando, não valida
+        setShouldValidateLimite(false);
+        setLimiteError("");
+      }
+    }
+  };
+
+  const handleLimiteBlur = () => {
+    // Valida quando o campo perde o foco
+    setShouldValidateLimite(true);
+  };
+
   return (
     <MainContainer>
       <Form title="CADASTRO DE TURMA" className="w-screen">
-        <div className="flex flex-col w-full max-w-[35rem]">
-          <p className="font-semibold text-2xl mb-2">Campus</p>
-          <div className="flex flex-row flex-wrap  justify-between md:justify-start md:gap-40">
-            {campusOptions.map((option) => (
-              <Input key={option.value} id={option.value} className="max-w-2xs" name="campus" type="radio" label={option.label} value={option.value} onChange={() => setSelectedCampus(option.value)} />
-            ))}
-          </div>
-        </div>
 
-        <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={Modalidades} />
+        <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={modalidadeOptions} />
         <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
-        <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={Locais} />
+        <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={localOptions} />
 
         <div className="flex flex-col w-full">
           <p className="font-semibold text-2xl mb-2">Horário</p>
@@ -301,7 +358,23 @@ const ClassForm = () => {
         </div>
 
         <Select value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
-        <Input value={limite} validation={limiteSchema} onChange={(e) => setLimite(e.target.value.replace(/\D/g, ""))} onValidationChange={(isValid) => console.log(isValid)} label="Limite de Alunos" placeholder="Quantidade" />
+
+        <div className="flex flex-col w-full">
+          <Input
+            value={limite}
+            onChange={handleLimiteChange}
+            onBlur={handleLimiteBlur}
+            onValidationChange={(isValid) => console.log(isValid)}
+            label="Limite de Alunos"
+            placeholder="Quantidade"
+          />
+          {limiteError && (
+            <div className="text-red-500 text-sm mt-1">
+              {limiteError}
+            </div>
+          )}
+        </div>
+
         <Button text="Confirmar" onClick={handleSubmit} />
       </Form>
     </MainContainer>
