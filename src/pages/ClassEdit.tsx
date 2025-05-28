@@ -240,11 +240,11 @@ useEffect(() => {
       };
       
       console.log("Tentando enviar json:", json);
-      await axios.post("/turmas", json);
-      alert("Cadastro realizado com sucesso!");
+      await axios.put(`/turmas/${id}`, json);
+      alert("Edição realizada com sucesso!");
     } catch (error) {
-      console.error("Erro ao cadastrar:", error);
-      alert("Erro ao cadastrar a turma.");
+      console.error("Erro ao editar:", error);
+      alert("Erro ao editar a turma.");
     }
   };
 
