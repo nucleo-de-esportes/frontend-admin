@@ -10,6 +10,7 @@ interface FiltroDeTurmasProps {
   }
 
 interface Turma {
+  turma_id: number;
   horario_inicio: string;
   horario_fim: string;
   limite_inscritos: number;
@@ -20,11 +21,11 @@ interface Turma {
 }
 
 const turmasExemplo: Turma[] = [
-  { horario_inicio: '08:00', horario_fim: '09:30', limite_inscritos: 25, dia_semana: 'Segunda', sigla: 'MAT101', local: 'Sala 101', modalidade: 'Presencial' },
-  { horario_inicio: '10:00', horario_fim: '11:30', limite_inscritos: 20, dia_semana: 'Terça', sigla: 'FIS202', local: 'Laboratório', modalidade: 'Híbrida' },
-  { horario_inicio: '13:00', horario_fim: '14:30', limite_inscritos: 30, dia_semana: 'Quarta', sigla: 'PORT103', local: 'Sala 203', modalidade: 'Online' },
-  { horario_inicio: '15:00', horario_fim: '16:30', limite_inscritos: 40, dia_semana: 'Quinta', sigla: 'HIST104', local: 'Auditório', modalidade: 'Presencial' },
-  { horario_inicio: '17:00', horario_fim: '18:30', limite_inscritos: 25, dia_semana: 'Sexta', sigla: 'GEO105', local: 'Sala 101', modalidade: 'Online' },
+  { turma_id: 1, horario_inicio: '08:00', horario_fim: '09:30', limite_inscritos: 25, dia_semana: 'Segunda', sigla: 'MAT101', local: 'Sala 101', modalidade: 'Presencial' },
+  { turma_id: 2, horario_inicio: '10:00', horario_fim: '11:30', limite_inscritos: 20, dia_semana: 'Terça', sigla: 'FIS202', local: 'Laboratório', modalidade: 'Híbrida' },
+  { turma_id: 3, horario_inicio: '13:00', horario_fim: '14:30', limite_inscritos: 30, dia_semana: 'Quarta', sigla: 'PORT103', local: 'Sala 203', modalidade: 'Online' },
+  { turma_id: 4, horario_inicio: '15:00', horario_fim: '16:30', limite_inscritos: 40, dia_semana: 'Quinta', sigla: 'HIST104', local: 'Auditório', modalidade: 'Presencial' },
+  { turma_id: 5, horario_inicio: '17:00', horario_fim: '18:30', limite_inscritos: 25, dia_semana: 'Sexta', sigla: 'GEO105', local: 'Sala 101', modalidade: 'Online' },
 ];
 
 function FiltroDeTurmas({ 

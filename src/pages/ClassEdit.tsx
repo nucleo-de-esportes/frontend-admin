@@ -7,6 +7,7 @@ import Button from "../components/Button";
 import Form from "../components/Form";
 import axios from "axios"
 import React from "react";
+import { useParams } from 'react-router-dom';
 
 const ClassForm = () => {
   const [selectedModalidade, setSelectedModalidade] = useState("");
@@ -29,19 +30,45 @@ const ClassForm = () => {
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
 
-  useEffect(() => {
-    axios.get<{ modalidade_id: number; nome: string; valor: number }[]>('/cad/mod')
-      .then(response => {
-        const formatted = response.data.map(mod => ({
-          value: mod.modalidade_id.toString(),
-          label: mod.nome
-        }));
-        setModalidadeOptions(formatted);
-      })
-      .catch(error => {
-        console.error('Erro ao carregar modalidades:', error);
-      });
-  }, []);
+  const [modalidadesCarregadas, setModalidadesCarregadas] = useState(false);
+  const [locaisCarregados, setLocaisCarregados] = useState(false);
+
+  const { id } = useParams();
+  
+useEffect(() => {
+  if (!modalidadesCarregadas || !locaisCarregados) return;
+
+  axios.get(`turmas/${id}`).then(response => {
+    const turmaData = Array.isArray(response.data) ? response.data[0] : response.data;
+
+    setHorarioInicio(turmaData.horario_inicio);
+    setHorarioFim(turmaData.horario_fim);
+    setLimite(turmaData.limite_inscritos.toString());
+    setSelectedDia(turmaData.dia_semana);
+
+    // Encontrar o ID da modalidade baseado no nome (sigla)
+    const modalidade = modalidadeOptions.find(mod => mod.label === turmaData.modalidade || mod.label === turmaData.sigla);
+    if (modalidade) setSelectedModalidade(modalidade.value);
+
+    // Encontrar o ID do local baseado no nome
+    const local = localOptions.find(loc => loc.label === turmaData.local);
+    if (local) setSelectedLocal(local.value);
+
+  }).catch(error => {
+    console.error('Erro ao carregar turma:', error);
+  });
+}, [modalidadesCarregadas, locaisCarregados]);
+
+useEffect(() => {
+  axios.get('/cad/mod').then(response => {
+    const formatted = response.data.map((mod: { modalidade_id: number; nome: string }) => ({
+      value: mod.modalidade_id.toString(),
+      label: mod.nome
+    }));
+    setModalidadeOptions(formatted);
+    setModalidadesCarregadas(true);
+  });
+}, []);
   
   const Professores = [
     { value: "option1", label: "Opção 1" },
@@ -50,19 +77,16 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
-  useEffect(() => {
-    axios.get<{ local_id: number; nome: string; campus: string }[]>('/cad/local')
-      .then(response => {
-        const formatted = response.data.map(loc => ({
-          value: loc.local_id.toString(),
-          label: loc.nome
-        }));
-        setLocalOptions(formatted);
-      })
-      .catch(error => {
-        console.error('Erro ao carregar locais:', error);
-      });
-  }, []);
+useEffect(() => {
+  axios.get('/cad/local').then(response => {
+    const formatted = response.data.map((loc: { local_id: number; nome: string }) => ({
+      value: loc.local_id.toString(),
+      label: loc.nome
+    }));
+    setLocalOptions(formatted);
+    setLocaisCarregados(true);
+  });
+}, []);
 
   const Dias = [
     { value: "option1", label: "Opção 1" },

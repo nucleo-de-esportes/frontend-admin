@@ -9,7 +9,7 @@ function App() {
       <Routes>
         <Route path="/cadastro/turma" element={<ClassForm />} />
         <Route path="/turmas" element={<ClassView />} />
-        <Route path="/editar/turma" element={<ClassEdit />} />
+        <Route path="/editar/turma/:id" element={<ClassEdit />} />
       </Routes>
     </Router>
   );

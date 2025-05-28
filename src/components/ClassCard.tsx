@@ -6,6 +6,7 @@ import { useIsSmallScreen } from '../hooks/useIsSmallScreen';
 
 
 export interface Turma {
+    turma_id: number;
     horario_inicio: string;
     horario_fim: string;
     limite_inscritos: number;
