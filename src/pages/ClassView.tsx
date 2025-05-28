@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import MainContainer from '../components/MainContainer';
 
 interface Turma {
+    turma_id: number;
     horario_inicio: string;
     horario_fim: string;
     limite_inscritos: number;
@@ -22,7 +23,6 @@ interface Turma {
     sigla: string;
     local: string;
     modalidade: string;
-    // id?: string | number; // Exemplo
 }
 
 export default function ClassView() {
@@ -87,7 +87,7 @@ export default function ClassView() {
     };
 
     const handleEditar = (turma: Turma): void => {
-        console.log("Editando turma:", turma);
+        navigate(`/editar/turma/${turma.turma_id}`)
     };
 
     // Função para dividir texto longo em múltiplas linhas
