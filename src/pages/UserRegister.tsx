@@ -6,7 +6,7 @@ import Form from "../components/Form";
 import Input from "../components/Input";
 import MainContainer from "../components/MainContainer";
 
-const emailValidationSchema = z.string().email("E-mail inválido");
+const emailValidationSchema = z.string().email("Formato de E-mail inválido");
 
 const passwordValidationSchema = z.string()
     .min(8, "Mínimo de 8 caracteres")
@@ -16,23 +16,19 @@ const passwordValidationSchema = z.string()
     .regex(/[\W_]/, "Mínimo de 1 caractere especial (ex: !@#$%)");
 
 const UserRegister = () => {
-    const [formData, setFormData] = useState({
-        email: "",
-        password: ""
-    });
+    const [formData, setFormData] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
+    const [isEmailValid, setIsEmailValid] = useState(false);
+    const [isPasswordValid, setIsPasswordValid] = useState(false);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-
         try {
             const response = await axios.post(import.meta.env.VITE_API_URL + "/user/register", {
                 email: formData.email,
@@ -62,6 +58,7 @@ const UserRegister = () => {
                     value={formData.email}
                     validation={emailValidationSchema}
                     onChange={handleInputChange}
+                    onValidationChange={setIsEmailValid}
                 />
 
                 <Input
@@ -72,13 +69,20 @@ const UserRegister = () => {
                     value={formData.password}
                     onChange={handleInputChange}
                     validation={passwordValidationSchema}
+                    onValidationChange={setIsPasswordValid}
                 />
 
                 <div className="flex flex-col w-full items-center gap-2 mt-8">
                     <Button
                         text={loading ? "Enviando..." : "Cadastrar-se"}
                         type="submit"
-                        disabled={loading}
+                        disabled={
+                            loading ||
+                            !isEmailValid ||
+                            !isPasswordValid ||
+                            !formData.email.trim() ||
+                            !formData.password.trim()
+                        }
                     />
 
                     <a href="/" className="text-[#BF0087] underline hover:text-[#43054E] transition">

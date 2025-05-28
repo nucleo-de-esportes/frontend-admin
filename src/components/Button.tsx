@@ -25,6 +25,7 @@ const Button = ({ size = 'md', color = '#BF0087', type = 'button', ...props }: B
                 text-lg font-semibold rounded-lg 
                 shadow-md transition-transform transform 
                 cursor-pointer min-w-max w-full
+                disabled:cursor-default
             `}
             style={{
                 backgroundColor: color,

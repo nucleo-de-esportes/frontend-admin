@@ -46,7 +46,7 @@ const Input = ({ type = "text", ...props }: InputProps) => {
         }
       }
     }
-    props.onBlur?.(event); // Chama o onBlur original se existir
+    props.onBlur?.(event);
   };
 
   const togglePasswordVisibility = () => {
