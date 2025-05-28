@@ -12,6 +12,7 @@ import { jsPDF } from 'jspdf';
 
 import { useIsSmallScreen } from '../hooks/useIsSmallScreen';
 import { useNavigate } from 'react-router-dom';
+import MainContainer from '../components/MainContainer';
 
 interface Turma {
     turma_id: number;
@@ -103,7 +104,7 @@ export default function ClassView() {
         for (const word of words) {
             const testLine = currentLine + (currentLine ? ' ' : '') + word;
             const testWidth = doc.getTextWidth(testLine);
-            
+
             if (testWidth <= maxWidth) {
                 currentLine = testLine;
             } else {
@@ -115,11 +116,11 @@ export default function ClassView() {
                 }
             }
         }
-        
+
         if (currentLine) {
             lines.push(currentLine);
         }
-        
+
         return lines;
     };
 
@@ -136,16 +137,16 @@ export default function ClassView() {
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.text('Relatório de Turmas', margin, currentY);
-        
+
         currentY += 10;
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.text(`Data de geração: ${new Date().toLocaleDateString()}`, margin, currentY);
-        
+
         currentY += 15;
         const columnWidths = [25, 20, 35, 40, 25, 20]; // larguras das colunas
         const headers = ["Sigla", "Dia", "Horário", "Local", "Modalidade", "Limite"];
-        
+
         // Calcular posições das colunas
         const columnPositions = [margin];
         for (let i = 0; i < columnWidths.length - 1; i++) {
@@ -155,15 +156,15 @@ export default function ClassView() {
         // Desenhar cabeçalho da tabela
         doc.setFillColor(66, 66, 66);
         doc.rect(margin, currentY - 4, pageWidth - 2 * margin, 8, 'F');
-        
+
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(9);
-        
+
         headers.forEach((header, index) => {
             doc.text(header, columnPositions[index] + 2, currentY);
         });
-        
+
         currentY += 6;
         doc.setTextColor(0, 0, 0);
         doc.setFont('helvetica', 'normal');
@@ -193,7 +194,7 @@ export default function ClassView() {
             // Calcular altura da linha (considerando quebra de texto)
             let maxLines = 1;
             const textLines: string[][] = [];
-            
+
             rowData.forEach((data, colIndex) => {
                 const lines = splitText(doc, data, columnWidths[colIndex] - 4);
                 textLines.push(lines);
@@ -289,67 +290,60 @@ export default function ClassView() {
     }
 
     return (
-        <div className="bg-[#E4E4E4] min-h-screen flex flex-col justify-between">
-            <Header />
-
-            <main className="flex-grow bg-gray-100">
-                <div className="max-w-4xl mx-auto bg-white shadow-sm min-h-[calc(100vh-128px)] relative">
-                    <div className="p-8">
-                        <div className="flex items-center justify-between mb-6">
-                            <Title title='TURMAS CADASTRADAS' />
-                            <div className="flex gap-2">
-                                <Button
-                                    icon={FileDown}
-                                    text={isSmall ? '' : 'PDF'}
-                                    size="sm"
-                                    onClick={exportToPDF}
-                                    disabled={turmasFiltradas.length === 0}
-                                />
-                                <Button
-                                    icon={Filter}
-                                    text='Filtrar'
-                                    size="sm"
-                                    onClick={() => setFiltroAberto(!filtroAberto)}
-                                />
-                                <Button
-                                    icon={Plus}
-                                    text={isSmall ? 'Turma' : ''}
-                                    size="sm"
-                                    onClick={() => navigate('/cadastro/turma')}
-                                />
-                            </div>
-                        </div>
-                        
-                        {/* Passar o estado `turmas` (vindo da API) para o filtro */}
-                        <FiltroDeTurmas 
-                            turmas={turmas} 
-                            onChange={(filtradas) => setTurmasFiltradas(filtradas)}
-                            hideButton={true}
-                            isOpen={filtroAberto}
-                            onToggleFilter={(isOpen) => setFiltroAberto(isOpen)}
+        <MainContainer>
+            <div className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                    <Title title='TURMAS CADASTRADAS' />
+                    <div className="flex gap-2">
+                        <Button
+                            icon={FileDown}
+                            text={isSmall ? '' : 'PDF'}
+                            size="sm"
+                            onClick={exportToPDF}
+                            disabled={turmasFiltradas.length === 0}
                         />
-                        
-                        {turmasFiltradas.length === 0 && !loading && (
-                             <div className="text-center py-10">
-                                <p className="text-gray-500 text-lg">Nenhuma turma encontrada.</p>
-                                <p className="text-gray-400">Tente ajustar os filtros ou cadastrar uma nova turma.</p>
-                             </div>
-                        )}
-
-                        <div className="space-y-4 mt-4">
-                            {turmasFiltradas.map((turma, index) => (
-                                <ClassCard
-                                    key={index}
-                                    turma={turma}
-                                    onEditar={handleEditar}
-                                />
-                            ))}
-                        </div>
+                        <Button
+                            icon={Filter}
+                            text='Filtrar'
+                            size="sm"
+                            onClick={() => setFiltroAberto(!filtroAberto)}
+                        />
+                        <Button
+                            icon={Plus}
+                            text={isSmall ? 'Turma' : ''}
+                            size="sm"
+                            onClick={() => navigate('/cadastro/turma')}
+                        />
                     </div>
                 </div>
-            </main>
 
-            <Footer />
-        </div>
+                {/* Passar o estado `turmas` (vindo da API) para o filtro */}
+                <FiltroDeTurmas
+                    turmas={turmas}
+                    onChange={(filtradas) => setTurmasFiltradas(filtradas)}
+                    hideButton={true}
+                    isOpen={filtroAberto}
+                    onToggleFilter={(isOpen) => setFiltroAberto(isOpen)}
+                />
+
+                {turmasFiltradas.length === 0 && !loading && (
+                    <div className="text-center py-10">
+                        <p className="text-gray-500 text-lg">Nenhuma turma encontrada.</p>
+                        <p className="text-gray-400">Tente ajustar os filtros ou cadastrar uma nova turma.</p>
+                    </div>
+                )}
+
+                <div className="space-y-4 mt-4">
+                    {turmasFiltradas.map((turma, index) => (
+                        <ClassCard
+                            key={index}
+                            turma={turma}
+                            onEditar={handleEditar}
+                        />
+                    ))}
+                </div>
+            </div>
+        </MainContainer>
+
     );
 }
