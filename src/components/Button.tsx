@@ -7,7 +7,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     minWidth?: string;
 }
 
-const Button = ({ size = 'md', color = '#BF0087', ...props }: ButtonProps) => {
+const Button = ({ size = 'md', color = '#BF0087', type = 'button', ...props }: ButtonProps) => {
     const sizeStyles = {
         sm: 'px-3 py-2 text-sm',
         md: 'px-6 py-3 text-base',
@@ -16,7 +16,7 @@ const Button = ({ size = 'md', color = '#BF0087', ...props }: ButtonProps) => {
 
     return (
         <button
-            type="button"
+            type={ type }
             onClick={props.onClick}
             className={`
                 ${props.className || ''}
@@ -25,6 +25,7 @@ const Button = ({ size = 'md', color = '#BF0087', ...props }: ButtonProps) => {
                 text-lg font-semibold rounded-lg 
                 shadow-md transition-transform transform 
                 cursor-pointer min-w-max w-full
+                disabled:cursor-default
             `}
             style={{
                 backgroundColor: color,
