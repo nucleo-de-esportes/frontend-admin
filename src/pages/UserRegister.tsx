@@ -47,6 +47,13 @@ const UserRegister = () => {
         }
     };
 
+    const isDisabled =
+        loading ||
+        !isEmailValid ||
+        !isPasswordValid ||
+        !formData.email.trim() ||
+        !formData.password.trim()
+
     return (
         <MainContainer>
             <Form title="Núcleo de Esportes" onSubmit={handleSubmit}>
@@ -76,13 +83,7 @@ const UserRegister = () => {
                     <Button
                         text={loading ? "Enviando..." : "Cadastrar-se"}
                         type="submit"
-                        disabled={
-                            loading ||
-                            !isEmailValid ||
-                            !isPasswordValid ||
-                            !formData.email.trim() ||
-                            !formData.password.trim()
-                        }
+                        disabled={isDisabled}
                     />
 
                     <a href="/" className="text-[#BF0087] underline hover:text-[#43054E] transition">

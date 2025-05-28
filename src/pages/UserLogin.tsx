@@ -1,9 +1,13 @@
 import { useState } from "react";
 import axios from "axios";
+import { z } from "zod";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import Input from "../components/Input";
 import MainContainer from "../components/MainContainer";
+
+const emailValidationSchema = z.string().email("Formate de E-mail inválido");
+const passwordValidationSchema = z.string().min(1, "Senha obrigatória");
 
 const UserLogin = () => {
     const [formData, setFormData] = useState({
@@ -11,6 +15,8 @@ const UserLogin = () => {
         password: ""
     });
     const [loading, setLoading] = useState(false);
+    const [isEmailValid, setIsEmailValid] = useState(false);
+    const [isPasswordValid, setIsPasswordValid] = useState(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -30,15 +36,9 @@ const UserLogin = () => {
                 password: formData.password
             });
 
-            // Caso o login seja bem-sucedido
             console.log("Login realizado com sucesso:", response.data);
-
-            // Salvar token JWT ou dados de sessão
             localStorage.setItem("auth_token", response.data.token);
-
-            // Redirecionar para a página inicial ou dashboard
             window.location.href = "/dashboard";
-
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 console.error("Erro no login:", err.response?.data);
@@ -50,6 +50,13 @@ const UserLogin = () => {
         }
     };
 
+    const isDisabled =
+        loading ||
+        !isEmailValid ||
+        !isPasswordValid ||
+        !formData.email.trim() ||
+        !formData.password.trim();
+
     return (
         <MainContainer>
             <Form title="Núcleo de Esportes" onSubmit={handleSubmit}>
@@ -60,6 +67,8 @@ const UserLogin = () => {
                     type="text"
                     value={formData.email}
                     onChange={handleInputChange}
+                    validation={emailValidationSchema}
+                    onValidationChange={setIsEmailValid}
                 />
 
                 <Input
@@ -69,6 +78,8 @@ const UserLogin = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
+                    validation={passwordValidationSchema}
+                    onValidationChange={setIsPasswordValid}
                 />
 
                 <a href="/forgot-password" className="text-[#BF0087] underline hover:text-[#43054E] transition mb-8">
@@ -78,7 +89,7 @@ const UserLogin = () => {
                 <Button
                     text={loading ? "Entrando..." : "Entrar"}
                     type="submit"
-                    disabled={loading}
+                    disabled={isDisabled}
                 />
 
                 <a href="/user/cadastro" className="text-[#BF0087] underline hover:text-[#43054E] transition">
