@@ -159,7 +159,9 @@ const TimeInput: React.FC<TimeInputProps> = ({
         } else if (minutes) {
           updateTime(formattedHours, minutes);
         }
-      } 
+      } else if (!isStayingInComponent && !hours && !minutes) {
+        if (onChange) onChange('');
+      }
 
       if(!isStayingInComponent && minutes && !hours){
          setHours('00');
@@ -188,7 +190,9 @@ const TimeInput: React.FC<TimeInputProps> = ({
         // Se está saindo do componente e tem horas mas não minutos, completa com zeros
         setMinutes('00');
         updateTime(hours, '00');
-      }      
+      } else if (!isStayingInComponent && !hours && !minutes) {
+        if (onChange) onChange('');
+      }
 
       // Chama o onBlur externo apenas quando realmente sair do componente
       if (!isStayingInComponent && onBlur) {
