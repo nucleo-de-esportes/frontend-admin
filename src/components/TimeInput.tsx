@@ -158,6 +158,10 @@ const TimeInput: React.FC<TimeInputProps> = ({
         } else if (minutes) {
           updateTime(formattedHours, minutes);
         }
+      } else if(!isStayingInComponent && !hours){
+        setHours('00');
+        const formattedMinutes = formatMinutes(minutes);
+        updateTime('00', formattedMinutes);
       }
       
       // Chama o onBlur externo apenas quando realmente sair do componente

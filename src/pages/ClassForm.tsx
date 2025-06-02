@@ -16,6 +16,8 @@ const ClassForm = () => {
   const [horarioFim, setHorarioFim] = useState("");
   const [limite, setLimite] = useState("");
   const [horarioError, setHorarioError] = useState("");
+  const [horarioInicioTouched, setHorarioInicioTouched] = useState(false);
+  const [horarioFimTouched, setHorarioFimTouched] = useState(false);
 
   const [limiteError, setLimiteError] = useState("");
 
@@ -84,6 +86,10 @@ const ClassForm = () => {
   };
 
   useEffect(() => {
+    if (!horarioInicioTouched || !horarioFimTouched) {
+      return;
+    }
+  
     if (!horarioInicio || !horarioFim) {
       setHorarioError("Campo obrigatório");
       return;
@@ -100,7 +106,7 @@ const ClassForm = () => {
     } else {
       setHorarioError("");
     }
-  }, [horarioInicio, horarioFim]);
+  }, [horarioInicio, horarioFim, horarioInicioTouched, horarioFimTouched]);
 
   useEffect(() => {
     if (shouldValidateLimite) {
@@ -181,10 +187,10 @@ const ClassForm = () => {
           <div className="flex flex-col w-full">
             <div className="flex flex-row flex-wrap justify-center gap-20">
               <div className="flex flex-col w-full md:max-w-2xs">
-              <Input type="time" value={horarioInicio} placeholder="00:00" onChange={(e) => setHorarioInicio(e.target.value)}/>
+              <Input type="time" value={horarioInicio} placeholder="00:00" onChange={(e) => setHorarioInicio(e.target.value)} onBlur={() => setHorarioInicioTouched(true)}/>
               </div>
               <div className="flex flex-col w-full md:max-w-2xs">
-              <Input type="time" value={horarioFim} placeholder="23:59" onChange={(e) => setHorarioFim(e.target.value)}/>
+              <Input type="time" value={horarioFim} placeholder="23:59" onChange={(e) => setHorarioFim(e.target.value)} onBlur={() => setHorarioFimTouched(true)}/>
               </div>
             </div>
             {horarioError && (
