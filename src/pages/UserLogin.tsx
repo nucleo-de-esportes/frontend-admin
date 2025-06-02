@@ -31,14 +31,14 @@ const UserLogin = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post(import.meta.env.VITE_API_URL, {
+            const response = await axios.post(import.meta.env.VITE_API_URL + "/user/login", {
                 email: formData.email,
                 password: formData.password
             });
 
             console.log("Login realizado com sucesso:", response.data);
             localStorage.setItem("auth_token", response.data.token);
-            window.location.href = "/dashboard";
+            window.location.href = "/turmas";
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 console.error("Erro no login:", err.response?.data);
