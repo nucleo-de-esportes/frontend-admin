@@ -47,6 +47,20 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
+  const isFormValid = () => {
+    return (
+      selectedModalidade &&
+      selectedProfessor &&
+      selectedLocal &&
+      selectedDia &&
+      horarioInicio &&
+      horarioFim &&
+      !horarioError &&
+      limite &&
+      !validateLimite(limite)
+    );
+  };
+
   useEffect(() => {
     axios.get<{ local_id: number; nome: string; campus: string }[]>('/cad/local')
       .then(response => {
@@ -219,7 +233,7 @@ const ClassForm = () => {
           )}
         </div>
 
-        <Button text="Confirmar" onClick={handleSubmit} />
+        <Button text="Confirmar" onClick={handleSubmit} disabled={!isFormValid()} />
       </Form>
     </MainContainer>
   );
