@@ -292,9 +292,9 @@ export default function ClassView() {
     return (
         <MainContainer>
             <div className="p-8">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2 sm:gap-0">
                     <Title title='TURMAS CADASTRADAS' />
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full sm:w-auto">
                         <Button
                             icon={FileDown}
                             text={isSmall ? '' : 'PDF'}

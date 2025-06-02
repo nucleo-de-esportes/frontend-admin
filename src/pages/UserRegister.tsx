@@ -77,6 +77,7 @@ const UserRegister = () => {
                     onChange={handleInputChange}
                     onValidationChange={setIsNameValid}
                 />
+                
                 <Input
                     label="Email"
                     placeholder="E-mail"
