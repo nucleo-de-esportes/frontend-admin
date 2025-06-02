@@ -17,12 +17,8 @@ const ClassForm = () => {
   const [limite, setLimite] = useState("");
   const [horarioError, setHorarioError] = useState("");
 
-  const [horarioInicioError, setHorarioInicioError] = useState("");
-  const [horarioFimError, setHorarioFimError] = useState("");
   const [limiteError, setLimiteError] = useState("");
 
-  const [shouldValidateInicio, setShouldValidateInicio] = useState(false);
-  const [shouldValidateFim, setShouldValidateFim] = useState(false);
   const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
 
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
@@ -70,40 +66,6 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
-  const formatTimeInput = (value: string): string => {
-    const onlyDigits = value.replace(/\D/g, "");
-
-    let formatted = onlyDigits;
-
-    if (formatted.length > 4) {
-      formatted = formatted.slice(0, 4);
-    }
-
-    if (formatted.length > 2) {
-      formatted = formatted.slice(0, 2) + ":" + formatted.slice(2);
-    }
-
-    return formatted;
-  };
-
-  const validateTime = (time: string): boolean => {
-    if (!/^([0-9]{2}):([0-9]{2})$/.test(time)) {
-      return false;
-    }
-
-    const [hours, minutes] = time.split(":").map(Number);
-
-    if (hours < 0 || hours > 23) {
-      return false;
-    }
-
-    if (minutes < 0 || minutes > 59) {
-      return false;
-    }
-
-    return true;
-  };
-
   const validateLimite = (value: string): string => {
     if (!value) {
       return "Campo obrigatório";
@@ -122,52 +84,24 @@ const ClassForm = () => {
   };
 
   useEffect(() => {
-    if (shouldValidateInicio && horarioInicio) {
-      if (horarioInicio.length === 5) {
-        if (!validateTime(horarioInicio)) {
-          setHorarioInicioError("Horário inválido.");
-        } else {
-          setHorarioInicioError("");
-        }
-      }
-    } else {
-      setHorarioInicioError("");
+    if (!horarioInicio || !horarioFim) {
+      setHorarioError("Campo obrigatório");
+      return;
     }
-
-    if (shouldValidateFim && horarioFim) {
-      if (horarioFim.length === 5) {
-        if (!validateTime(horarioFim)) {
-          setHorarioFimError("Horário inválido.");
-        } else {
-          setHorarioFimError("");
-        }
-      }
+  
+    const [horaInicio, minInicio] = horarioInicio.split(":").map(Number);
+    const [horaFim, minFim] = horarioFim.split(":").map(Number);
+  
+    const inicioEmMinutos = horaInicio * 60 + minInicio;
+    const fimEmMinutos = horaFim * 60 + minFim;
+  
+    if (fimEmMinutos <= inicioEmMinutos) {
+      setHorarioError("O horário de fim deve ser maior que o horário de início");
     } else {
-      setHorarioFimError("");
-    }
-
-    if (shouldValidateInicio && shouldValidateFim && horarioInicio && horarioFim) {
-      if (horarioInicio.length === 5 && horarioFim.length === 5) {
-        if (validateTime(horarioInicio) && validateTime(horarioFim)) {
-          const [horaInicio, minInicio] = horarioInicio.split(":").map(Number);
-          const [horaFim, minFim] = horarioFim.split(":").map(Number);
-
-          const inicioEmMinutos = horaInicio * 60 + minInicio;
-          const fimEmMinutos = horaFim * 60 + minFim;
-
-          if (fimEmMinutos <= inicioEmMinutos) {
-            setHorarioError("O horário de fim deve ser maior que o horário de início");
-          } else {
-            setHorarioError("");
-          }
-        }
-      }
-    } else if (!horarioInicioError && !horarioFimError) {
       setHorarioError("");
     }
-  }, [horarioInicio, horarioFim, shouldValidateInicio, shouldValidateFim, horarioInicioError, horarioFimError]);
+  }, [horarioInicio, horarioFim]);
 
-  // Validação do limite
   useEffect(() => {
     if (shouldValidateLimite) {
       const error = validateLimite(limite);
@@ -178,20 +112,13 @@ const ClassForm = () => {
   }, [limite, shouldValidateLimite]);
 
   const handleSubmit = async () => {
-    setShouldValidateInicio(true);
-    setShouldValidateFim(true);
     setShouldValidateLimite(true);
 
-    if (horarioInicio.length === 5 && !validateTime(horarioInicio)) {
-      alert("Horário de início inválido. Use valores entre 00:00 e 23:59");
+    if (!horarioInicio || !horarioFim) {
+      setHorarioError("Campo obrigatório");
       return;
     }
-
-    if (horarioFim.length === 5 && !validateTime(horarioFim)) {
-      alert("Horário de fim inválido. Use valores entre 00:00 e 23:59");
-      return;
-    }
-
+  
     if (horarioError) {
       alert(horarioError);
       return;
@@ -223,74 +150,14 @@ const ClassForm = () => {
     }
   };
 
-  const handleHorarioInicioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const formattedValue = formatTimeInput(rawValue);
-    setHorarioInicio(formattedValue);
-
-    if (rawValue !== formattedValue) {
-      setHorarioInicio(formattedValue);
-      if (formattedValue.length === 5) {
-        setShouldValidateInicio(true);
-      }
-      return;
-    }
-
-
-    if (formattedValue.length === 5) {
-      setShouldValidateInicio(true);
-    } else {
-      setShouldValidateInicio(false);
-      setHorarioInicioError("");
-    }
-  };
-
-  const handleHorarioFimChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const formattedValue = formatTimeInput(rawValue);
-    setHorarioFim(formattedValue);
-
-    if (rawValue !== formattedValue) {
-      setHorarioFim(formattedValue);
-      if (formattedValue.length === 5) {
-        setShouldValidateFim(true);
-      }
-      return;
-    }
-
-
-    if (formattedValue.length === 5) {
-      setShouldValidateFim(true);
-    } else {
-      setShouldValidateFim(false);
-      setHorarioFimError("");
-    }
-  };
-
-  const handleHorarioInicioBlur = () => {
-    setShouldValidateInicio(true);
-    if (horarioInicio.length !== 5 || !validateTime(horarioInicio)) {
-      setHorarioInicioError("Horário inválido.");
-    }
-  };
-
-  const handleHorarioFimBlur = () => {
-    setShouldValidateFim(true);
-    if (horarioFim.length !== 5 || !validateTime(horarioFim)) {
-      setHorarioFimError("Horário inválido.");
-    }
-  };
-
   const handleLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
-    if (value.length <= 2) { // Permite apenas até 2 caracteres
+    const value = e.target.value.replace(/\D/g, "");
+    if (value.length <= 2) { 
       setLimite(value);
 
-      // Se o usuário digitou 2 caracteres, valida automaticamente
       if (value.length === 2) {
         setShouldValidateLimite(true);
       } else {
-        // Se ainda está digitando, não valida
         setShouldValidateLimite(false);
         setLimiteError("");
       }
@@ -298,7 +165,6 @@ const ClassForm = () => {
   };
 
   const handleLimiteBlur = () => {
-    // Valida quando o campo perde o foco
     setShouldValidateLimite(true);
   };
 
@@ -313,40 +179,12 @@ const ClassForm = () => {
         <div className="flex flex-col w-full">
           <p className="font-semibold text-2xl mb-2">Horário</p>
           <div className="flex flex-col w-full">
-            <div className="flex flex-row flex-wrap justify-center gap-4">
+            <div className="flex flex-row flex-wrap justify-center gap-20">
               <div className="flex flex-col w-full md:max-w-2xs">
-                <Input
-                  className="w-full"
-                  value={horarioInicio}
-                  onChange={handleHorarioInicioChange}
-                  onBlur={handleHorarioInicioBlur}
-                  onValidationChange={(isValid) => console.log("Início valid:", isValid)}
-                  minWidth="17rem"
-                  label="Início"
-                  placeholder="00:00"
-                />
-                {horarioInicioError && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {horarioInicioError}
-                  </div>
-                )}
+              <Input type="time" value={horarioInicio} placeholder="00:00" onChange={(e) => setHorarioInicio(e.target.value)}/>
               </div>
               <div className="flex flex-col w-full md:max-w-2xs">
-                <Input
-                  className="w-full"
-                  value={horarioFim}
-                  onChange={handleHorarioFimChange}
-                  onBlur={handleHorarioFimBlur}
-                  onValidationChange={(isValid) => console.log("Fim valid:", isValid)}
-                  minWidth="17rem"
-                  label="Fim"
-                  placeholder="23:59"
-                />
-                {horarioFimError && (
-                  <div className="text-red-500 text-sm mt-1">
-                    {horarioFimError}
-                  </div>
-                )}
+              <Input type="time" value={horarioFim} placeholder="23:59" onChange={(e) => setHorarioFim(e.target.value)}/>
               </div>
             </div>
             {horarioError && (
