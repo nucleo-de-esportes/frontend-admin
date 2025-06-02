@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { set } from 'zod';
 
 // Exportar a interface para que possa ser usada em outros arquivos
 export interface TimeInputProps {
@@ -158,10 +159,10 @@ const TimeInput: React.FC<TimeInputProps> = ({
         } else if (minutes) {
           updateTime(formattedHours, minutes);
         }
-      } else if(!isStayingInComponent && !hours){
-        setHours('00');
-        const formattedMinutes = formatMinutes(minutes);
-        updateTime('00', formattedMinutes);
+      } 
+
+      if(!isStayingInComponent && minutes && !hours){
+         setHours('00');
       }
       
       // Chama o onBlur externo apenas quando realmente sair do componente
@@ -187,8 +188,8 @@ const TimeInput: React.FC<TimeInputProps> = ({
         // Se está saindo do componente e tem horas mas não minutos, completa com zeros
         setMinutes('00');
         updateTime(hours, '00');
-      }
-      
+      }      
+
       // Chama o onBlur externo apenas quando realmente sair do componente
       if (!isStayingInComponent && onBlur) {
         onBlur(createSyntheticBlurEvent('minutes'));
