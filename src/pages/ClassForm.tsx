@@ -224,12 +224,12 @@ const ClassForm = () => {
         <div className="flex flex-col w-full">
           <p className="font-semibold text-2xl mb-2">Horário</p>
           <div className="flex flex-col w-full">
-            <div className="flex flex-row flex-wrap justify-center gap-2 md:gap-20">
+            <div className="flex flex-row flex-wrap justify-center gap-2 md:gap-32">
               <div className="flex flex-col w-full md:max-w-2xs">
-              <Input type="time" value={horarioInicio} placeholder="00:00" onChange={(e) => setHorarioInicio(e.target.value)} onBlur={() => setHorarioInicioTouched(true)}/>
+              <Input type="time" value={horarioInicio} placeholder="00:00" onChange={(e) => setHorarioInicio(e.target.value)} onBlur={() => setHorarioInicioTouched(true)} label="Início"/>
               </div>
               <div className="flex flex-col w-full md:max-w-2xs">
-              <Input type="time" value={horarioFim} placeholder="23:59" onChange={(e) => setHorarioFim(e.target.value)} onBlur={() => setHorarioFimTouched(true)}/>
+              <Input type="time" value={horarioFim} placeholder="23:59" onChange={(e) => setHorarioFim(e.target.value)} onBlur={() => setHorarioFimTouched(true)} label="Fim"/>
               </div>
             </div>
             {horarioError && (

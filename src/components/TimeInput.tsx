@@ -8,6 +8,7 @@ export interface TimeInputProps {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
+  label?: string;
 }
 
 const TimeInput: React.FC<TimeInputProps> = ({
