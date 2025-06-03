@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { RefObject } from 'react';
 
 // Exportar a interface para que possa ser usada em outros arquivos
 export interface TimeInputProps {
+  ref?: RefObject<TimeInputRef>;
   value?: string; // Formato "HH:MM"
   onChange?: (time: string) => void;
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
@@ -9,16 +11,27 @@ export interface TimeInputProps {
   disabled?: boolean;
   className?: string;
   label?: string;
+  // Novos props para navegação externa
+  onNavigateNext?: () => void; // Chamado quando deve ir para o próximo campo
+  onNavigatePrevious?: () => void; // Chamado quando deve ir para o campo anterior
 }
 
-const TimeInput: React.FC<TimeInputProps> = ({
+// Interface para métodos expostos via ref
+export interface TimeInputRef {
+  focusStart: () => void; // Foca no início (horas)
+  focusEnd: () => void;   // Foca no final (minutos)
+}
+
+const TimeInput = forwardRef<TimeInputRef, TimeInputProps>(({
   value = '',
   onChange,
   onBlur,
-  placeholder = '00:00', // valor default
+  placeholder = '00:00',
   disabled = false,
-  className = ''
-}) => {
+  className = '',
+  onNavigateNext,
+  onNavigatePrevious
+}, ref) => {
   const [hours, setHours] = useState('');
   const [minutes, setMinutes] = useState('');
   const [focusedField, setFocusedField] = useState<'hours' | 'minutes' | null>(null);
@@ -27,6 +40,27 @@ const TimeInput: React.FC<TimeInputProps> = ({
   const minutesRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [placeholderHours, placeholderMinutes] = placeholder.split(':');
+
+  // Expor métodos via ref
+  useImperativeHandle(ref, () => ({
+    focusStart: () => {
+      hoursRef.current?.focus();
+      setTimeout(() => {
+        if (hoursRef.current) {
+          hoursRef.current.setSelectionRange(0, 0);
+        }
+      }, 0);
+    },
+    focusEnd: () => {
+      minutesRef.current?.focus();
+      setTimeout(() => {
+        if (minutesRef.current) {
+          const length = minutesRef.current.value.length;
+          minutesRef.current.setSelectionRange(length, length);
+        }
+      }, 0);
+    }
+  }));
 
   // Sincronizar com o valor externo
   useEffect(() => {
@@ -213,39 +247,38 @@ const TimeInput: React.FC<TimeInputProps> = ({
     // Navegação com seta direita
     if (e.key === 'ArrowRight') {
       if (field === 'hours' && cursorPosition >= inputLength) {
-        // Se está no final das horas, vai para minutos
+        // Se está no final das horas, sempre vai para minutos primeiro
         e.preventDefault();
         minutesRef.current?.focus();
-        // Posiciona o cursor no início dos minutos
         setTimeout(() => {
           if (minutesRef.current) {
             minutesRef.current.setSelectionRange(0, 0);
           }
         }, 0);
+      } else if (field === 'minutes' && cursorPosition >= inputLength && onNavigateNext) {
+        // Se está no final dos minutos e tem callback externo
+        e.preventDefault();
+        onNavigateNext();
       }
-      // Se não está no final, deixa o cursor se mover normalmente dentro do campo
     } 
     
     // Navegação com seta esquerda
     else if (e.key === 'ArrowLeft') {
       if (field === 'minutes' && cursorPosition <= 0) {
-        // Se está no início dos minutos, vai para horas
+        // Se está no início dos minutos, sempre vai para horas primeiro
         e.preventDefault();
         hoursRef.current?.focus();
-        // Posiciona o cursor no final das horas
         setTimeout(() => {
           if (hoursRef.current) {
             const hoursLength = hoursRef.current.value.length;
             hoursRef.current.setSelectionRange(hoursLength, hoursLength);
           }
         }, 0);
+      } else if (field === 'hours' && cursorPosition <= 0 && onNavigatePrevious) {
+        // Se está no início das horas e tem callback externo
+        e.preventDefault();
+        onNavigatePrevious();
       }
-      // Se não está no início, deixa o cursor se mover normalmente dentro do campo
-    }
-    
-    // Tab para próximo campo
-    if (e.key === 'Tab' && field === 'hours' && !e.shiftKey) {
-      // Deixar o comportamento padrão do Tab
     }
     
     // Backspace no início dos minutos volta para horas
@@ -323,6 +356,8 @@ const TimeInput: React.FC<TimeInputProps> = ({
       </div>
     </div>
   );
-};
+});
+
+TimeInput.displayName = 'TimeInput';
 
 export default TimeInput;

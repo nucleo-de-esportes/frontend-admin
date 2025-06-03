@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { z } from "zod";
 import PasswordInput from "./PasswordInput";
 import TimeInput from "./TimeInput"
+import { TimeInputRef } from "./TimeInput";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,7 +11,14 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   validation?: z.ZodType<unknown>;
   className?: string;
   onValidationChange?: (isValid: boolean) => void;
+
+
+  inputRef?: React.Ref<TimeInputRef>;
+  onNavigateNext?: () => void;
+  onNavigatePrevious?: () => void;
 }
+
+
 
 const Input = ({ type = "text", ...props }: InputProps) => {
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +62,6 @@ const Input = ({ type = "text", ...props }: InputProps) => {
     setShowPassword(!showPassword);
   };
 
-  // Handler específico para TimeInput
   const handleTimeChange = (time: string) => {
     // Cria um evento sintético para manter compatibilidade
     const syntheticEvent = {
@@ -104,14 +111,17 @@ const Input = ({ type = "text", ...props }: InputProps) => {
     ),
     time: () => (
       <TimeInput
-        value={typeof props.value === 'string' ? props.value : ''}
+        ref={props.inputRef}
+        value={typeof props.value === "string" ? props.value : ""}
         onChange={handleTimeChange}
-        onBlur={handleBlur}
+        onBlur={props.onBlur}
         placeholder={props.placeholder}
         disabled={props.disabled}
-        className={props.className || ''}
+        className={props.className || ""}
+        onNavigateNext={props.onNavigateNext}
+        onNavigatePrevious={props.onNavigatePrevious}
       />
-    )
+    ),   
   };
 
   const renderInput = inputTypes[type];

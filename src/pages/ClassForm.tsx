@@ -1,11 +1,12 @@
 import Input from "../components/Input";
 import { Select } from "../components/Select";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import axios from "axios"
 import React from "react";
 import MainContainer from "../components/MainContainer";
+import { TimeInputRef } from "../components/TimeInput"; // Importar o TimeInput modificado
 
 const ClassForm = () => {
   const [selectedModalidade, setSelectedModalidade] = useState("");
@@ -20,8 +21,11 @@ const ClassForm = () => {
   const [horarioFimTouched, setHorarioFimTouched] = useState(false);
 
   const [limiteError, setLimiteError] = useState("");
-
   const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
+
+  // Refs para os TimeInputs
+  const horarioInicioRef = useRef<TimeInputRef>(null);
+  const horarioFimRef = useRef<TimeInputRef>(null);
 
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
@@ -208,6 +212,15 @@ const ClassForm = () => {
     setShouldValidateLimite(true);
   };
 
+  // Funções de navegação entre TimeInputs
+  const handleInicioNavigateNext = () => {
+    horarioFimRef.current?.focusStart();
+  };
+
+  const handleFimNavigatePrevious = () => {
+    horarioInicioRef.current?.focusEnd();
+  };
+
   return (
     <MainContainer>
       <Form title="CADASTRO DE TURMA" className="w-screen">
@@ -226,10 +239,28 @@ const ClassForm = () => {
           <div className="flex flex-col w-full">
             <div className="flex flex-row flex-wrap justify-center gap-2 md:gap-32">
               <div className="flex flex-col w-full md:max-w-2xs">
-              <Input type="time" value={horarioInicio} placeholder="00:00" onChange={(e) => setHorarioInicio(e.target.value)} onBlur={() => setHorarioInicioTouched(true)} label="Início"/>
+                <label className="font-semibold text-lg mb-1">Início</label>
+                <Input
+                  type="time"
+                  inputRef={horarioInicioRef}
+                  value={horarioInicio}
+                  placeholder="00:00"
+                  onChange={(e) => setHorarioInicio(e.target.value)}
+                  onBlur={() => setHorarioInicioTouched(true)}
+                  onNavigateNext={handleInicioNavigateNext}
+                />
               </div>
               <div className="flex flex-col w-full md:max-w-2xs">
-              <Input type="time" value={horarioFim} placeholder="23:59" onChange={(e) => setHorarioFim(e.target.value)} onBlur={() => setHorarioFimTouched(true)} label="Fim"/>
+                <label className="font-semibold text-lg mb-1">Fim</label>
+                <Input
+                  type="time"
+                  inputRef={horarioFimRef}
+                  value={horarioFim}
+                  placeholder="23:59"
+                  onChange={(e) => setHorarioFim(e.target.value)}
+                  onBlur={() => setHorarioFimTouched(true)}
+                  onNavigatePrevious={handleFimNavigatePrevious}
+                />
               </div>
             </div>
             {horarioError && (
