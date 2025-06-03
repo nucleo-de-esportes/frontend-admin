@@ -1,8 +1,7 @@
 import Input from "../components/Input";
 import { Select } from "../components/Select";
 import { useState, useEffect } from "react";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import MainContainer from "../components/MainContainer";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import axios from "axios"
@@ -328,11 +327,8 @@ useEffect(() => {
   };
 
   return (
-    <>
-      <div className="flex flex-col items-center bg-[#E4E4E4] min-h-screen justify-between">
-        <Header />
+    <MainContainer>
         <Form title="CADASTRO DE TURMA" className="w-screen">
-
           <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={modalidadeOptions} />
           <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
           <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={localOptions} />
@@ -404,9 +400,7 @@ useEffect(() => {
           
           <Button text="Confirmar" onClick={handleSubmit}/>
         </Form>
-        <Footer />
-      </div>
-    </>
+    </MainContainer>
   );
 };
 
