@@ -188,6 +188,7 @@ const ClassForm = () => {
       console.log("Tentando enviar json:", json);
       await axios.post("/turmas", json);
       alert("Cadastro realizado com sucesso!");
+      window.location.href = "/turmas"
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
       alert("Erro ao cadastrar a turma.");
