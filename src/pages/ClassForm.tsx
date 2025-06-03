@@ -47,10 +47,23 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
+  // Função para verificar se a modalidade selecionada é "nado livre"
+  const isNadoLivre = () => {
+    const modalidadeSelecionada = modalidadeOptions.find(mod => mod.value === selectedModalidade);
+    return modalidadeSelecionada?.label.toLowerCase().includes('nado livre') || false;
+  };
+
+  // Função para verificar se o professor é obrigatório
+  const isProfessorRequired = () => {
+    return selectedModalidade && !isNadoLivre();
+  };
+
   const isFormValid = () => {
+    const professorValid = isProfessorRequired() ? selectedProfessor : true;
+    
     return (
       selectedModalidade &&
-      selectedProfessor &&
+      professorValid &&
       selectedLocal &&
       selectedDia &&
       horarioInicio &&
@@ -98,6 +111,13 @@ const ClassForm = () => {
 
     return "";
   };
+
+  // Limpar professor quando modalidade mudar para nado livre
+  useEffect(() => {
+    if (isNadoLivre()) {
+      setSelectedProfessor("");
+    }
+  }, [selectedModalidade, modalidadeOptions]);
 
   useEffect(() => {
     if (!horarioInicioTouched || !horarioFimTouched) {
@@ -193,7 +213,12 @@ const ClassForm = () => {
       <Form title="CADASTRO DE TURMA" className="w-screen">
 
         <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={modalidadeOptions} />
-        <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
+        
+        {/* Só mostra o select de professor se a modalidade estiver selecionada e não for nado livre */}
+        {selectedModalidade && !isNadoLivre() && (
+          <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
+        )}
+        
         <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={localOptions} />
 
         <div className="flex flex-col w-full">
