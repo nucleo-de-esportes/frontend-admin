@@ -5,7 +5,6 @@ import Button from "../components/Button";
 import Form from "../components/Form";
 import Input from "../components/Input";
 import MainContainer from "../components/MainContainer";
-import Message from "../components/Message"; // Import the new Message component
 
 const emailValidationSchema = z.string().email("Formato de E-mail inválido");
 
@@ -28,7 +27,6 @@ const UserRegister = () => {
     const [isEmailValid, setIsEmailValid] = useState(false);
     const [isPasswordValid, setIsPasswordValid] = useState(false);
     const [isNameValid, setIsNameValid] = useState(false);
-    const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -38,16 +36,15 @@ const UserRegister = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setFeedbackMessage(null);
 
         try {
              await axios.post(import.meta.env.VITE_API_URL + "/user/register", {
-                name: formData.name,
+                nome: formData.name,
                 email: formData.email,
-                password: formData.password
+                password: formData.password,
+                user_type: "2"
             });
 
-            setFeedbackMessage({ text: "Registro realizado com sucesso! Redirecionando para login.", type: 'success' });
             setTimeout(() => {
                 window.location.href = "/"; // Or use useNavigate for better SPA behavior
             }, 1500);
@@ -57,10 +54,8 @@ const UserRegister = () => {
                     err.response?.data?.message || 
                     (typeof err.response?.data === 'string' ? err.response.data : "Erro no cadastro. Verifique os dados e tente novamente.");
                 console.error("Erro no cadastro:", apiErrorMessage, err.response);
-                setFeedbackMessage({ text: apiErrorMessage, type: 'error' });
             } else {
                 console.error("Erro inesperado:", err);
-                setFeedbackMessage({ text: "Ocorreu um erro inesperado. Tente novamente mais tarde.", type: 'error' });
             }
         } finally {
             setLoading(false);
@@ -79,13 +74,6 @@ const UserRegister = () => {
     return (
         <MainContainer>
             <Form title="Núcleo de Esportes" onSubmit={handleSubmit}>
-                {feedbackMessage && (
-                    <Message
-                        message={feedbackMessage.text}
-                        type={feedbackMessage.type}
-                        onClose={() => setFeedbackMessage(null)}
-                    />
-                )}
                 <Input
                     label="Nome Completo"
                     placeholder="Seu nome completo"

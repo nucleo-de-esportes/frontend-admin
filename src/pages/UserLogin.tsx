@@ -37,8 +37,8 @@ const UserLogin = () => {
             });
 
             console.log("Login realizado com sucesso:", response.data);
-            localStorage.setItem("auth_token", response.data.token);
-            window.location.href = "/turmas";
+            localStorage.setItem("auth_token", response.data.usuario.token);
+            // window.location.href = "/turmas";
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 console.error("Erro no login:", err.response?.data);
