@@ -1,29 +1,28 @@
 import { useState } from "react";
 import axios from "axios";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth"; // caminho correto do seu contexto
 import Button from "../components/Button";
 import Form from "../components/Form";
 import Input from "../components/Input";
 import MainContainer from "../components/MainContainer";
 
-const emailValidationSchema = z.string().email("Formate de E-mail inválido");
+const emailValidationSchema = z.string().email("Formato de E-mail inválido");
 const passwordValidationSchema = z.string().min(1, "Senha obrigatória");
 
 const UserLogin = () => {
-    const [formData, setFormData] = useState({
-        email: "",
-        password: ""
-    });
+    const [formData, setFormData] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
     const [isEmailValid, setIsEmailValid] = useState(false);
     const [isPasswordValid, setIsPasswordValid] = useState(false);
 
+    const { login } = useAuth(); // <- usa a função do contexto
+    const navigate = useNavigate(); // <- para redirecionamento
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -31,14 +30,16 @@ const UserLogin = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post(import.meta.env.VITE_API_URL, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/user/login`, {
                 email: formData.email,
                 password: formData.password
             });
 
-            console.log("Login realizado com sucesso:", response.data);
-            localStorage.setItem("auth_token", response.data.token);
-            window.location.href = "/dashboard";
+            const token = response.data.usuario.token;
+            login(token); // <- armazena e decodifica o token
+
+            // Redireciona o usuário para página segura
+            navigate("/turmas");
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 console.error("Erro no login:", err.response?.data);
