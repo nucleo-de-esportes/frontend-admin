@@ -5,8 +5,9 @@ import Button from "../components/Button";
 import Form from "../components/Form";
 import axios from "axios"
 import React from "react";
+import { useNavigate } from 'react-router-dom';
 import MainContainer from "../components/MainContainer";
-import { TimeInputRef } from "../components/TimeInput"; // Importar o TimeInput modificado
+import { TimeInputRef } from "../components/TimeInput";
 
 const ClassForm = () => {
   const [selectedModalidade, setSelectedModalidade] = useState("");
@@ -23,12 +24,13 @@ const ClassForm = () => {
   const [limiteError, setLimiteError] = useState("");
   const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
 
-  // Refs para os TimeInputs
   const horarioInicioRef = useRef<TimeInputRef>(null);
   const horarioFimRef = useRef<TimeInputRef>(null);
 
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get<{ modalidade_id: number; nome: string; valor: number }[]>('/cad/mod')
@@ -51,13 +53,11 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
-  // Função para verificar se a modalidade selecionada é "nado livre"
   const isNadoLivre = () => {
     const modalidadeSelecionada = modalidadeOptions.find(mod => mod.value === selectedModalidade);
     return modalidadeSelecionada?.label.toLowerCase().includes('nado livre') || false;
   };
 
-  // Função para verificar se o professor é obrigatório
   const isProfessorRequired = () => {
     return selectedModalidade && !isNadoLivre();
   };
@@ -116,7 +116,6 @@ const ClassForm = () => {
     return "";
   };
 
-  // Limpar professor quando modalidade mudar para nado livre
   useEffect(() => {
     if (isNadoLivre()) {
       setSelectedProfessor("");
@@ -188,7 +187,7 @@ const ClassForm = () => {
       console.log("Tentando enviar json:", json);
       await axios.post("/turmas", json);
       alert("Cadastro realizado com sucesso!");
-      window.location.href = "/turmas"
+      navigate("/turmas");
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
       alert("Erro ao cadastrar a turma.");
@@ -213,7 +212,6 @@ const ClassForm = () => {
     setShouldValidateLimite(true);
   };
 
-  // Funções de navegação entre TimeInputs
   const handleInicioNavigateNext = () => {
     horarioFimRef.current?.focusStart();
   };
@@ -290,7 +288,7 @@ const ClassForm = () => {
           )}
         </div>
 
-        <Button text="Confirmar" onClick={handleSubmit} disabled={!isFormValid()} />
+        <Button text="Cadastrar" onClick={handleSubmit} disabled={!isFormValid()} />
       </Form>
     </MainContainer>
   );
