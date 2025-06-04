@@ -293,6 +293,16 @@ const TimeInput = forwardRef<TimeInputRef, TimeInputProps>(({
         }
       }, 0);
     }
+
+    if (e.key === 'Backspace' && field === 'hours' && hours === '' && cursorPosition === 0 && onNavigatePrevious) {
+      e.preventDefault();
+      onNavigatePrevious();
+    }
+
+    if(e.key ==='Backspace' && field === 'hours' && hours != '' && cursorPosition === 0 && onNavigatePrevious) {
+      e.preventDefault();
+      onNavigatePrevious();
+    }
   };
 
   const handleContainerClick = (e: React.MouseEvent) => {
