@@ -42,7 +42,7 @@ const UserRegister = () => {
                 nome: formData.name,
                 email: formData.email,
                 password: formData.password,
-                user_type: "2"
+                user_type: "-1"
             });
 
             setTimeout(() => {
