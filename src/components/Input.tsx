@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { z } from "zod";
 import PasswordInput from "./PasswordInput";
+import TimeInput from "./TimeInput"
+import { TimeInputRef } from "./TimeInput";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -9,7 +11,14 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   validation?: z.ZodType<unknown>;
   className?: string;
   onValidationChange?: (isValid: boolean) => void;
+
+
+  inputRef?: React.Ref<TimeInputRef>;
+  onNavigateNext?: () => void;
+  onNavigatePrevious?: () => void;
 }
+
+
 
 const Input = ({ type = "text", ...props }: InputProps) => {
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +43,7 @@ const Input = ({ type = "text", ...props }: InputProps) => {
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     const value = event.target.value;
-    if (props.validation && type === "text") {
+    if (props.validation && (type === "text" || type === "time")) {
       try {
         props.validation.parse(value);
         setError(null);
@@ -51,6 +60,16 @@ const Input = ({ type = "text", ...props }: InputProps) => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleTimeChange = (time: string) => {
+    // Cria um evento sintético para manter compatibilidade
+    const syntheticEvent = {
+      target: { value: time, name: props.name },
+      currentTarget: { value: time, name: props.name }
+    } as React.ChangeEvent<HTMLInputElement>;
+    
+    props.onChange?.(syntheticEvent);
   };
 
   const inputTypes: Record<string, () => React.ReactElement> = {
@@ -89,24 +108,37 @@ const Input = ({ type = "text", ...props }: InputProps) => {
         />
         {props.label && <span className="text-lg text-gray-900">{props.label}</span>}
       </div>
-    )
+    ),
+    time: () => (
+      <TimeInput
+        ref={props.inputRef}
+        value={typeof props.value === "string" ? props.value : ""}
+        onChange={handleTimeChange}
+        onBlur={props.onBlur}
+        placeholder={props.placeholder}
+        disabled={props.disabled}
+        className={props.className || ""}
+        onNavigateNext={props.onNavigateNext}
+        onNavigatePrevious={props.onNavigatePrevious}
+      />
+    ),   
   };
 
   const renderInput = inputTypes[type];
 
   return (
     <div
-      className={`flex ${type === 'text' || type === 'password' ? 'flex-col' : 'flex-row'} gap-1 ${props.className ? ' w-max' : 'w-full'}`}
+      className={`flex ${type === 'text' || type === 'password' || type === 'time' ? 'flex-col' : 'flex-row'} gap-1 ${props.className ? ' w-max' : 'w-full'}`}
       style={{
         minWidth: props.minWidth || 'auto',
         maxWidth: props.maxWidth || 'auto',
       }}
     >
-      {(type === 'text' || type === 'password') && props.label && (
+      {(type === 'text' || type === 'password' || type === 'time') && props.label && (
         <label className="w-max block text-2xl font-medium mb-2 text-gray-900">{props.label}</label>
       )}
       {renderInput && renderInput()}
-      {(type === 'text') && (
+      {(type === 'text' || type === 'time') && (
         <span className="text-red-500 text-sm h-2">{error}</span>
       )}
     </div>
