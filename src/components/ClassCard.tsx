@@ -1,24 +1,14 @@
 import { Pencil } from 'lucide-react';
 import formatDayWeek from '../utils/formatDayWeek';
 import Button from './Button';
+import { Turma } from '../types/Class';
 
 import { useIsSmallScreen } from '../hooks/useIsSmallScreen';
 
 
-export interface Turma {
-    turma_id: number;
-    horario_inicio: string;
-    horario_fim: string;
-    limite_inscritos: number;
-    dia_semana: string;
-    sigla: string;
-    local: string;
-    modalidade: string;
-}
-
 interface ClassCardProps {
     turma: Turma;
-    onEditar: (turma: Turma) => void;
+    onEditar?: (turma: Turma) => void;
 }
 
 const ClassCard = ({ turma, onEditar }: ClassCardProps) => {
@@ -36,14 +26,16 @@ const ClassCard = ({ turma, onEditar }: ClassCardProps) => {
                     {turma.local}, {diasFormatados} {turma.horario_inicio} - {turma.horario_fim}
                 </p>
             </div>
-            <div className="w-2/12">
-                <Button
-                    onClick={() => onEditar(turma)}
-                    icon={Pencil}
-                    text={isSmall ? '' : 'Editar'}
-                    size="sm"
-                />
-            </div>
+            {onEditar && (
+                <div className="w-2/12">
+                    <Button
+                        onClick={() => onEditar(turma)}
+                        icon={Pencil}
+                        text={isSmall ? '' : 'Editar'}
+                        size="sm"
+                    />
+                </div>
+            )}
         </div>
     );
 };

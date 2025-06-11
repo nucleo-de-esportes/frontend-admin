@@ -1,17 +1,24 @@
-import React, { JSX } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
-type PrivateRouteProps = {
-  children: JSX.Element;
-  allowedTypes: string[];
-};
+type PrivateRouteProps =
+  | {
+    allowedTypes: string[];
+    children: React.ReactElement;
+    elementByType?: never;
+  }
+  | {
+    allowedTypes: string[];
+    children?: never;
+    elementByType?: { [key: string]: React.ReactElement };
+  };
 
-const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedTypes }) => {
+const PrivateRoute: React.FC<PrivateRouteProps> = ({ allowedTypes, children, elementByType }) => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Carregando...</div>; // ou qualquer loader
+    return <div>Carregando...</div>;
   }
 
   if (!user) {
@@ -19,10 +26,15 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedTypes }) =
   }
 
   if (!allowedTypes.includes(user.user_type)) {
-    return <Navigate to="/" />;
+    return <Navigate to="/turmas" />;
   }
 
-  return children;
+  if (elementByType) {
+    const Component = elementByType[user.user_type];
+    return Component || <Navigate to="/" />;
+  }
+
+  return children!;
 };
 
 export default PrivateRoute;
