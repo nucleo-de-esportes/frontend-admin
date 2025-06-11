@@ -2,14 +2,15 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
 import { AuthProvider } from "./components/AuthProvider";
 import ClassForm from "./pages/ClassForm";
-import ClassView from "./pages/ClassView";
+import ClassViewAdm from "./pages/ClassViewAdm";
 import ClassEdit from "./pages/ClassEdit";
 import UserRegister from "./pages/UserRegister";
 import UserLogin from "./pages/UserLogin";
+import ClassView from "./pages/ClassView";
 
 function App() {
   return (
-    <AuthProvider> {/* ✅ envolve tudo */}
+    <AuthProvider>
       <Router>
         <Routes>
           <Route path="/" element={<UserLogin />} />
@@ -26,9 +27,13 @@ function App() {
           <Route
             path="/turmas"
             element={
-              <PrivateRoute allowedTypes={["admin", "aluno"]}>
-                <ClassView />
-              </PrivateRoute>
+              <PrivateRoute
+                allowedTypes={["admin", "aluno"]}
+                elementByType={{
+                  admin: <ClassViewAdm />,
+                  aluno: <ClassView />,
+                }}
+              />
             }
           />
 
