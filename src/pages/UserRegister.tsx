@@ -1,6 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
+import { useApiAlert } from "../hooks/useApiAlert";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import Input from "../components/Input";
@@ -27,6 +29,9 @@ const UserRegister = () => {
     const [isEmailValid, setIsEmailValid] = useState(false);
     const [isPasswordValid, setIsPasswordValid] = useState(false);
     const [isNameValid, setIsNameValid] = useState(false);
+    
+    const navigate = useNavigate();
+    const { showAlert } = useApiAlert();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -38,23 +43,35 @@ const UserRegister = () => {
         setLoading(true);
 
         try {
-             await axios.post(import.meta.env.VITE_API_URL + "/user/register", {
+            await axios.post(import.meta.env.VITE_API_URL + "/user/register", {
                 nome: formData.name,
                 email: formData.email,
                 password: formData.password,
                 user_type: "-1"
             });
 
+            showAlert(
+                'success', 
+                'Usuário cadastrado com sucesso! Você receberá um e-mail de confirmação.', 
+                'Cadastro Realizado',
+                3000
+            );
+
             setTimeout(() => {
-                window.location.href = "/"; // Or use useNavigate for better SPA behavior
+                navigate("/");
             }, 1500);
+
         } catch (err) {
             if (axios.isAxiosError(err)) {
                 const apiErrorMessage = 
                     err.response?.data?.message || 
                     (typeof err.response?.data === 'string' ? err.response.data : "Erro no cadastro. Verifique os dados e tente novamente.");
+                
+                showAlert('error', apiErrorMessage, 'Erro no Cadastro', 1500);
+                
                 console.error("Erro no cadastro:", apiErrorMessage, err.response);
             } else {
+                showAlert('error', 'Erro inesperado. Tente novamente.', 'Erro');
                 console.error("Erro inesperado:", err);
             }
         } finally {

@@ -2,7 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth"; // caminho correto do seu contexto
+import { useApiAlert } from "../hooks/useApiAlert";
+import { useAuth } from "../hooks/useAuth";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import Input from "../components/Input";
@@ -17,8 +18,10 @@ const UserLogin = () => {
     const [isEmailValid, setIsEmailValid] = useState(false);
     const [isPasswordValid, setIsPasswordValid] = useState(false);
 
-    const { login } = useAuth(); // <- usa a função do contexto
-    const navigate = useNavigate(); // <- para redirecionamento
+    const { login } = useAuth();
+    const navigate = useNavigate();
+
+    const { showAlert } = useApiAlert();
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -36,14 +39,27 @@ const UserLogin = () => {
             });
 
             const token = response.data.usuario.token;
-            login(token); // <- armazena e decodifica o token
+            login(token);
 
-            // Redireciona o usuário para página segura
-            navigate("/turmas");
+            showAlert(
+                'success', 
+                'Login realizado com sucesso!', 
+                'Login Realizado',
+                2000
+            )
+            
+            setTimeout(() => {
+                navigate("/turmas");
+            }, 1500);
         } catch (err) {
             if (axios.isAxiosError(err)) {
-                console.error("Erro no login:", err.response?.data);
+                const apiErrorMessage = 
+                    err.response?.data?.message || 
+                    (typeof err.response?.data === 'string' ? err.response.data : "Erro no login. Verifique suas credenciais.");
+                
+                showAlert('error', apiErrorMessage, 'Erro no Login', 1500);
             } else {
+                showAlert('error', 'Erro inesperado. Tente novamente.', 'Erro');
                 console.error("Erro inesperado:", err);
             }
         } finally {
