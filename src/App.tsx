@@ -9,6 +9,7 @@ import ClassEdit from "./pages/ClassEdit";
 import UserRegister from "./pages/UserRegister";
 import UserLogin from "./pages/UserLogin";
 import ClassView from "./pages/ClassView";
+import ClassEnrollmentForm from './pages/ClassEnrollmentForm'
 
 function App() {
   return (
@@ -21,9 +22,13 @@ function App() {
             <Route
               path="/cadastro/turma"
               element={
-                <PrivateRoute allowedTypes={["admin"]}>
-                  <ClassForm />
-                </PrivateRoute>
+                <PrivateRoute
+                  allowedTypes={["admin", "aluno"]}
+                  elementByType={{
+                    admin: <ClassForm />,
+                    aluno: <ClassEnrollmentForm />,
+                  }}
+                />
               }
             />
 
