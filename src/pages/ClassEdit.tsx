@@ -6,6 +6,7 @@ import Button from "../components/Button";
 import Form from "../components/Form";
 import axios from "axios"
 import React from "react";
+import { useAuth } from "../hooks/useAuth";
 import { useParams, useNavigate } from 'react-router-dom';
 import { TimeInputRef } from "../components/TimeInput"; 
 import { FaSave, FaTrash } from "react-icons/fa";
@@ -36,11 +37,16 @@ const ClassForm = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
 useEffect(() => {
   if (!modalidadesCarregadas || !locaisCarregados) return;
 
-  axios.get(`turmas/${id}`).then(response => {
+  axios.get(`turmas/${id}`,{
+    headers: {
+      'Authorization': user?.token
+    }
+  }).then(response => {
     const turmaData = Array.isArray(response.data) ? response.data[0] : response.data;
 
     setHorarioInicio(turmaData.horario_inicio);
