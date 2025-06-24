@@ -1,15 +1,17 @@
+// ClassForm.tsx
 import Input from "../components/Input";
 import { Select } from "../components/Select";
 import { useState, useEffect, useRef } from "react";
 import Button from "../components/Button";
 import Form from "../components/Form";
-import axios from "axios"
+import axios from "axios";
 import React from "react";
 import { useNavigate } from 'react-router-dom';
 import MainContainer from "../components/MainContainer";
 import { TimeInputRef } from "../components/TimeInput";
 import { useAuth } from "../hooks/useAuth";
 import { useApiAlert } from "../hooks/useApiAlert";
+import ConfirmationModal from "../components/ConfirmationModal"; 
 
 const ClassForm = () => {
   const [selectedModalidade, setSelectedModalidade] = useState("");
@@ -34,6 +36,10 @@ const ClassForm = () => {
 
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
+
+  // State for the confirmation modal
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [dataToConfirm, setDataToConfirm] = useState<any>(null); 
 
   const { user } = useAuth();
 
@@ -73,7 +79,7 @@ const ClassForm = () => {
         console.error('Erro ao carregar locais:', error);
       })
       .finally(() => {
-        setLocaisLoading(false); 
+        setLocaisLoading(false);
       });
   }, []);
 
@@ -84,6 +90,14 @@ const ClassForm = () => {
     { value: "option4", label: "Opção 4" },
   ];
 
+  const Dias = [
+    { value: "option1", label: "Opção 1" },
+    { value: "option2", label: "Opção 2" },
+    { value: "option3", label: "Opção 3" },
+    { value: "option4", label: "Opção 4" },
+  ];
+
+
   const isNadoLivre = () => {
     const modalidadeSelecionada = modalidadeOptions.find(mod => mod.value === selectedModalidade);
     return modalidadeSelecionada?.label.toLowerCase().includes('nado livre') || false;
@@ -92,29 +106,6 @@ const ClassForm = () => {
   const isProfessorRequired = () => {
     return selectedModalidade && !isNadoLivre();
   };
-
-  const isFormValid = () => {
-    const professorValid = isProfessorRequired() ? selectedProfessor : true;
-    
-    return (
-      selectedModalidade &&
-      professorValid &&
-      selectedLocal &&
-      selectedDia &&
-      horarioInicio &&
-      horarioFim &&
-      !horarioError &&
-      limite &&
-      !validateLimite(limite)
-    );
-  };
-
-  const Dias = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
-  ];
 
   const validateLimite = (value: string): string => {
     if (!value) {
@@ -133,6 +124,22 @@ const ClassForm = () => {
     return "";
   };
 
+  const isFormValid = () => {
+    const professorValid = isProfessorRequired() ? selectedProfessor : true;
+
+    return (
+      selectedModalidade &&
+      professorValid &&
+      selectedLocal &&
+      selectedDia &&
+      horarioInicio &&
+      horarioFim &&
+      !horarioError &&
+      limite &&
+      !validateLimite(limite)
+    );
+  };
+
   useEffect(() => {
     if (isNadoLivre()) {
       setSelectedProfessor("");
@@ -143,18 +150,18 @@ const ClassForm = () => {
     if (!horarioInicioTouched || !horarioFimTouched) {
       return;
     }
-  
+
     if (!horarioInicio || !horarioFim) {
       setHorarioError("Campo obrigatório");
       return;
     }
-  
+
     const [horaInicio, minInicio] = horarioInicio.split(":").map(Number);
     const [horaFim, minFim] = horarioFim.split(":").map(Number);
-  
+
     const inicioEmMinutos = horaInicio * 60 + minInicio;
     const fimEmMinutos = horaFim * 60 + minFim;
-  
+
     if (fimEmMinutos <= inicioEmMinutos) {
       setHorarioError("O horário de fim deve ser maior que o horário de início");
     } else {
@@ -171,14 +178,14 @@ const ClassForm = () => {
     }
   }, [limite, shouldValidateLimite]);
 
-  const handleSubmit = async () => {
+  const handleShowConfirmation = () => {
     setShouldValidateLimite(true);
 
     if (!horarioInicio || !horarioFim) {
       setHorarioError("Campo obrigatório");
       return;
     }
-  
+
     if (horarioError) {
       alert(horarioError);
       return;
@@ -190,30 +197,49 @@ const ClassForm = () => {
       return;
     }
 
+    // If all validations pass, prepare data for the modal and open it
+    const selectedModalidadeLabel = modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '';
+    const selectedProfessorLabel = Professores.find(prof => prof.value === selectedProfessor)?.label || '';
+    const selectedLocalLabel = localOptions.find(loc => loc.value === selectedLocal)?.label || '';
+    const selectedDiaLabel = Dias.find(dia => dia.value === selectedDia)?.label || '';
+
+    setDataToConfirm({
+      modalidade: selectedModalidadeLabel,
+      professor: isProfessorRequired() ? selectedProfessorLabel : undefined,
+      local: selectedLocalLabel,
+      dia: selectedDiaLabel,
+      horarioInicio: horarioInicio,
+      horarioFim: horarioFim,
+      limite: limite,
+    });
+    setIsConfirmationModalOpen(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    setIsConfirmationModalOpen(false); // Close the modal
     try {
       const json = {
         horario_inicio: horarioInicio,
         horario_fim: horarioFim,
         limite_inscritos: parseInt(limite, 10),
         dia_semana: selectedDia,
-        // Assuming 'sigla' is derived from selectedModalidade, you might need to adjust this based on your backend
-        sigla: modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '', 
+        sigla: modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '',
         local_id: parseInt(selectedLocal, 10),
         modalidade_id: parseInt(selectedModalidade, 10),
       };
 
       console.log("Tentando enviar json:", json);
-      await axios.post("/turmas", json,{
-    headers: {
-      'Authorization': `Bearer ${user?.token}`
-    }
-  });
+      await axios.post("/turmas", json, {
+        headers: {
+          'Authorization': `Bearer ${user?.token}`
+        }
+      });
       showAlert(
-        'success', 
-        'Cadastro realizado com sucesso!', 
+        'success',
+        'Cadastro realizado com sucesso!',
         'Cadastro Realizado',
         2000
-      )
+      );
       navigate("/turmas");
     } catch (error) {
       console.error("Erro ao cadastrar:", error);
@@ -223,7 +249,7 @@ const ClassForm = () => {
 
   const handleLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 2) { 
+    if (value.length <= 2) {
       setLimite(value);
 
       if (value.length === 2) {
@@ -251,25 +277,24 @@ const ClassForm = () => {
     <MainContainer>
       <Form title="CADASTRO DE TURMA" className="w-screen">
 
-        <Select 
-          value={selectedModalidade} 
-          onChange={setSelectedModalidade} 
-          label="Modalidade" 
+        <Select
+          value={selectedModalidade}
+          onChange={setSelectedModalidade}
+          label="Modalidade"
           options={modalidadeOptions}
-          loading={modalidadesLoading} // Spinner in dropdown while loading and open
+          loading={modalidadesLoading}
         />
-        
-        {/* Só mostra o select de professor se a modalidade estiver selecionada e não for nado livre */}
+
         {selectedModalidade && !isNadoLivre() && (
           <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
         )}
-        
-        <Select 
-          value={selectedLocal} 
-          onChange={setSelectedLocal} 
-          label="Local" 
+
+        <Select
+          value={selectedLocal}
+          onChange={setSelectedLocal}
+          label="Local"
           options={localOptions}
-          loading={locaisLoading} // Spinner in dropdown while loading and open
+          loading={locaisLoading}
         />
 
         <div className="flex flex-col w-full">
@@ -316,7 +341,6 @@ const ClassForm = () => {
             value={limite}
             onChange={handleLimiteChange}
             onBlur={handleLimiteBlur}
-            onValidationChange={(isValid) => console.log(isValid)}
             label="Limite de Alunos"
             placeholder="Quantidade"
           />
@@ -327,8 +351,18 @@ const ClassForm = () => {
           )}
         </div>
 
-        <Button text="Cadastrar" onClick={handleSubmit} disabled={!isFormValid()} />
+        <Button text="Cadastrar" onClick={handleShowConfirmation} disabled={!isFormValid()} />
       </Form>
+
+      {/* Confirmation Modal */}
+      {isConfirmationModalOpen && dataToConfirm && (
+        <ConfirmationModal
+          isOpen={isConfirmationModalOpen}
+          onClose={() => setIsConfirmationModalOpen(false)}
+          onConfirm={handleConfirmSubmit}
+          data={dataToConfirm}
+        />
+      )}
     </MainContainer>
   );
 };

@@ -14,11 +14,13 @@ import { TimeInputRef } from "../components/TimeInput";
 import { FaSave, FaTrash } from "react-icons/fa";
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import Title from '../components/Title'; // Assuming you have a Title component
+import Title from '../components/Title';
+import ConfirmationModal from '../components/ConfirmationModal';
+import DeletionModal from '../components/DeletionModal'; // Import DeletionModal
 
 const ClassForm = () => {
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null); // New state for error message
+  const [error, setError] = useState<string | null>(null);
   const [selectedModalidade, setSelectedModalidade] = useState("");
   const [selectedProfessor, setSelectedProfessor] = useState("");
   const [selectedLocal, setSelectedLocal] = useState("");
@@ -42,6 +44,9 @@ const ClassForm = () => {
   const [modalidadesCarregadas, setModalidadesCarregadas] = useState(false);
   const [locaisCarregados, setLocaisCarregados] = useState(false);
 
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+  const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false); // New state for DeletionModal
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -50,11 +55,11 @@ const ClassForm = () => {
 
   const fetchTurmaData = async () => {
     setLoading(true);
-    setError(null); 
+    setError(null);
     const timeout = setTimeout(() => {
       setError("Erro ao conectar com o servidor");
       setLoading(false);
-    }, 10000); 
+    }, 10000);
 
     try {
       const response = await axios.get(`turmas/${id}`, {
@@ -79,7 +84,7 @@ const ClassForm = () => {
       setLoading(false);
 
     } catch (error) {
-      clearTimeout(timeout); 
+      clearTimeout(timeout);
       console.error('Erro ao carregar turma:', error);
       setError("Erro ao carregar a turma. Verifique sua conexão ou tente novamente.");
       setLoading(false);
@@ -227,6 +232,11 @@ const ClassForm = () => {
       return;
     }
 
+    setIsConfirmationModalOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    setIsConfirmationModalOpen(false);
     try {
       const json = {
         horario_inicio: horarioInicio,
@@ -257,13 +267,13 @@ const ClassForm = () => {
     }
   };
 
-  const handleDelete = async () => {
-    const confirmDelete = window.confirm("Tem certeza que deseja remover esta turma? Esta ação não pode ser desfeita.");
+  const handleDelete = () => {
+    // Open the deletion modal instead of directly calling confirm/API
+    setIsDeletionModalOpen(true);
+  };
 
-    if (!confirmDelete) {
-      return;
-    }
-
+  const handleConfirmDelete = async () => {
+    setIsDeletionModalOpen(false); // Close the modal
     try {
       await axios.delete(`/turmas/${id}`, {
         headers: {
@@ -331,7 +341,7 @@ const ClassForm = () => {
             <p className="text-red-500 mt-4">{error}</p>
             <Button
               text="Tentar Novamente"
-              onClick={fetchTurmaData} // Call the function to re-fetch data
+              onClick={fetchTurmaData}
               size="md"
               className="mt-6"
             />
@@ -342,12 +352,26 @@ const ClassForm = () => {
     );
   }
 
+  const selectedModalidadeLabel = modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '';
+  const selectedProfessorLabel = Professores.find(opt => opt.value === selectedProfessor)?.label || '';
+  const selectedLocalLabel = localOptions.find(opt => opt.value === selectedLocal)?.label || '';
+  const selectedDiaLabel = Dias.find(opt => opt.value === selectedDia)?.label || '';
+
+  const modalData = {
+    modalidade: selectedModalidadeLabel,
+    professor: isProfessorRequired() ? selectedProfessorLabel : undefined,
+    local: selectedLocalLabel,
+    dia: selectedDiaLabel,
+    horarioInicio: horarioInicio,
+    horarioFim: horarioFim,
+    limite: limite,
+  };
+
   return (
     <MainContainer>
       <Form title="EDIÇÃO DE TURMA" className="w-screen">
         <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={modalidadeOptions} loading={!modalidadesCarregadas}/>
 
-        {/* Só mostra o select de professor se a modalidade estiver selecionada e não for nado livre */}
         {selectedModalidade && !isNadoLivre() && (
           <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
         )}
@@ -409,7 +433,6 @@ const ClassForm = () => {
           )}
         </div>
 
-        {/* Botões de ação */}
         <div className="flex flex-col sm:flex-row gap-4 w-full">
           <Button
             text="Salvar"
@@ -421,13 +444,27 @@ const ClassForm = () => {
           />
           <Button
             text="Remover"
-            onClick={handleDelete}
+            onClick={handleDelete} // This will now open the DeletionModal
             icon={FaTrash}
             color="#dc2626"
             className="hover:brightness-80"
           />
         </div>
       </Form>
+
+      <ConfirmationModal
+        isOpen={isConfirmationModalOpen}
+        onClose={() => setIsConfirmationModalOpen(false)}
+        onConfirm={handleConfirmSave}
+        data={modalData}
+      />
+
+      <DeletionModal // Render the DeletionModal
+        isOpen={isDeletionModalOpen}
+        onClose={() => setIsDeletionModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        data={modalData}
+      />
     </MainContainer>
   );
 };
