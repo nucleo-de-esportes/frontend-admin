@@ -7,6 +7,7 @@ import Button from '../components/Button';
 import Title from '../components/Title';
 import Loading from '../components/Loading';
 import { useAuth } from '../hooks/useAuth';
+import { useApiAlert } from '../hooks/useApiAlert';
 
 interface Modalidade {
   id: number;
@@ -31,6 +32,7 @@ interface ClassEnrollmentFormProps {
 const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showAlert } = useApiAlert();
   const [selectedModalidade, setSelectedModalidade] = useState<string>('');
   const [modalidades, setModalidades] = useState<Modalidade[]>([]);
   const [turmas, setTurmas] = useState<Turma[]>([]);
@@ -60,7 +62,12 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       setModalidades(modalidadesUnicas);
     } catch (error) {
       console.error('Erro ao buscar turmas:', error);
-      // Aqui você pode adicionar tratamento de erro, como mostrar uma mensagem para o usuário
+      showAlert(
+        'error',
+        'Não foi possível carregar as turmas. Tente novamente.',
+        'Erro ao Carregar',
+        3000
+      );
     } finally {
       setInitialLoading(false);
     }
@@ -112,7 +119,22 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
 
   const handleContinuar = async () => {
     if (selectedTurmas.length === 0) {
-      alert('Por favor, selecione pelo menos uma turma.');
+      showAlert(
+        'warning',
+        'Selecione pelo menos uma turma para continuar.',
+        'Seleção Necessária',
+        3000
+      );
+      return;
+    }
+
+    if (!user?.token) {
+      showAlert(
+        'error',
+        'Token de autenticação não encontrado. Faça login novamente.',
+        'Erro de Autenticação',
+        3000
+      );
       return;
     }
 
@@ -123,12 +145,12 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       
       // Fazer inscrição para cada turma selecionada
       const inscricoes = selectedTurmas.map(async (turmaId) => {
-        return axios.post(
+        return axios.put(
           `${apiUrl}/user/inscricao`,
           { TurmaID: turmaId },
           {
             headers: {
-              'Authorization': `Bearer ${user?.token}`,
+              'Authorization': `Bearer ${user.token}`,
               'Content-Type': 'application/json'
             }
           }
@@ -138,7 +160,12 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       // Aguardar todas as inscrições serem processadas
       await Promise.all(inscricoes);
 
-      alert(`Inscrição realizada com sucesso! Você foi inscrito em ${selectedTurmas.length} turma(s).`);
+      showAlert(
+        'success',
+        `Você foi inscrito com sucesso em ${selectedTurmas.length} turma(s)!`,
+        'Inscrição Realizada',
+        3000
+      );
       
       // Limpar seleções após sucesso
       setSelectedTurmas([]);
@@ -150,16 +177,41 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 401) {
-          alert('Erro: Token de autenticação inválido. Faça login novamente.');
+          showAlert(
+            'error',
+            'Token de autenticação inválido. Faça login novamente.',
+            'Erro de Autenticação',
+            4000
+          );
         } else if (error.response?.status === 400) {
-          alert('Erro: Dados inválidos ou turma já está lotada.');
+          showAlert(
+            'error',
+            'Dados inválidos ou turma já está lotada.',
+            'Erro na Inscrição',
+            4000
+          );
         } else if (error.response?.status === 409) {
-          alert('Erro: Você já está inscrito em uma ou mais turmas selecionadas.');
+          showAlert(
+            'warning',
+            'Você já está inscrito em uma ou mais turmas selecionadas.',
+            'Inscrição Duplicada',
+            4000
+          );
         } else {
-          alert(`Erro ao realizar inscrição: ${error.response?.data?.message || 'Erro desconhecido'}`);
+          showAlert(
+            'error',
+            error.response?.data?.message || 'Erro desconhecido ao realizar inscrição.',
+            'Erro na Inscrição',
+            4000
+          );
         }
       } else {
-        alert('Erro de conexão. Verifique sua internet e tente novamente.');
+        showAlert(
+          'error',
+          'Erro de conexão. Verifique sua internet e tente novamente.',
+          'Erro de Conexão',
+          4000
+        );
       }
     } finally {
       setSubmitting(false);
@@ -267,7 +319,7 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
                   {selectedModalidade ? 'Nenhuma turma disponível' : 'Selecione uma modalidade primeiro'}
                 </div>
               ) : (
-                <div className="p-1 h-72 overflow-y-auto">
+                <div className="p-1">
                   {turmas.map((turma) => (
                     <div
                       key={turma.turma_id}
