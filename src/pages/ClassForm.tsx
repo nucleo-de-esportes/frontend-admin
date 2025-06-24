@@ -8,6 +8,7 @@ import React from "react";
 import { useNavigate } from 'react-router-dom';
 import MainContainer from "../components/MainContainer";
 import { TimeInputRef } from "../components/TimeInput";
+import { useAuth } from "../hooks/useAuth";
 
 const ClassForm = () => {
   const [selectedModalidade, setSelectedModalidade] = useState("");
@@ -27,6 +28,8 @@ const ClassForm = () => {
   const horarioInicioRef = useRef<TimeInputRef>(null);
   const horarioFimRef = useRef<TimeInputRef>(null);
 
+  const { user } = useAuth();
+  
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
 
@@ -185,7 +188,11 @@ const ClassForm = () => {
       };
 
       console.log("Tentando enviar json:", json);
-      await axios.post("/turmas", json);
+      await axios.post("/turmas", json, {
+        headers: {
+          'Authorization': `Bearer ${user?.token}`
+        }
+      });
       alert("Cadastro realizado com sucesso!");
       navigate("/turmas");
     } catch (error) {

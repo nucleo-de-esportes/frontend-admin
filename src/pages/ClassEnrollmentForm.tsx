@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import MainContainer from '../components/MainContainer';
 import Button from '../components/Button';
 import Title from '../components/Title';
+import Loading from '../components/Loading';
+import { useAuth } from '../hooks/useAuth';
+import { useApiAlert } from '../hooks/useApiAlert';
 
 interface Modalidade {
   id: number;
@@ -11,11 +15,14 @@ interface Modalidade {
 }
 
 interface Turma {
-  id: number;
-  nome: string;
-  horario: string;
-  diasSemana: string[];
-  vagas: number;
+  turma_id: number;
+  modalidade: string;
+  sigla: string;
+  dia_semana: string;
+  horario_inicio: string;
+  horario_fim: string;
+  limite_inscritos: number;
+  local: string;
 }
 
 interface ClassEnrollmentFormProps {
@@ -24,70 +31,68 @@ interface ClassEnrollmentFormProps {
 
 const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showAlert } = useApiAlert();
   const [selectedModalidade, setSelectedModalidade] = useState<string>('');
   const [modalidades, setModalidades] = useState<Modalidade[]>([]);
   const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [allTurmas, setAllTurmas] = useState<Turma[]>([]);
   const [selectedTurmas, setSelectedTurmas] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [modalidadeDropdownOpen, setModalidadeDropdownOpen] = useState(false);
 
-  // Mock data para modalidades
+  // Buscar todas as turmas do backend
+  const fetchAllTurmas = async () => {
+    try {
+      setInitialLoading(true);
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await axios.get<Turma[]>(`${apiUrl}/turmas`);
+      setAllTurmas(response.data);
+      
+      // Extrair modalidades únicas das turmas
+      const modalidadesUnicas = Array.from(
+        new Set(response.data.map(turma => turma.modalidade))
+      ).map((modalidade, index) => ({
+        id: index + 1,
+        nome: modalidade
+      }));
+      
+      setModalidades(modalidadesUnicas);
+    } catch (error) {
+      console.error('Erro ao buscar turmas:', error);
+      showAlert(
+        'error',
+        'Não foi possível carregar as turmas. Tente novamente.',
+        'Erro ao Carregar',
+        3000
+      );
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  // Carregar dados iniciais
   useEffect(() => {
-    const mockModalidades: Modalidade[] = [
-      { id: 1, nome: 'Futebol' },
-      { id: 2, nome: 'Basquete' },
-      { id: 3, nome: 'Vôlei' },
-      { id: 4, nome: 'Natação' },
-      { id: 5, nome: 'Tênis' },
-      { id: 6, nome: 'Judô' },
-    ];
-    setModalidades(mockModalidades);
+    fetchAllTurmas();
   }, []);
 
-  // Função para buscar turmas quando modalidade é selecionada
-  const fetchTurmas = async (modalidadeId: string) => {
+  // Função para filtrar turmas por modalidade
+  const filterTurmasByModalidade = (modalidadeNome: string) => {
     setLoading(true);
     setTurmas([]);
     setSelectedTurmas([]);
 
     try {
-      // Simulação de API call - substitua pela sua implementação real
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simula delay
-
-      // Mock data das turmas baseado na modalidade
-      const mockTurmas: Record<string, Turma[]> = {
-        '1': [ // Futebol
-          { id: 1, nome: 'Futebol A', horario: '14:00 - 15:30', diasSemana: ['Segunda', 'Quarta'], vagas: 12 },
-          { id: 2, nome: 'Futebol B', horario: '15:30 - 17:00', diasSemana: ['Terça', 'Quinta'], vagas: 8 },
-          { id: 3, nome: 'Futebol C', horario: '17:00 - 18:30', diasSemana: ['Segunda', 'Quarta', 'Sexta'], vagas: 5 },
-        ],
-        '2': [ // Basquete
-          { id: 4, nome: 'Basquete B', horario: '16:00 - 17:30', diasSemana: ['Terça', 'Quinta'], vagas: 15 },
-          { id: 5, nome: 'Basquete A', horario: '18:00 - 19:30', diasSemana: ['Segunda', 'Quarta'], vagas: 10 },
-        ],
-        '3': [ // Vôlei
-          { id: 6, nome: 'Vôlei A', horario: '19:00 - 20:30', diasSemana: ['Terça', 'Quinta'], vagas: 18 },
-          { id: 7, nome: 'Vôlei B', horario: '17:00 - 18:30', diasSemana: ['Segunda', 'Sexta'], vagas: 14 },
-        ],
-        '4': [ // Natação
-          { id: 8, nome: 'Natação A', horario: '07:00 - 08:00', diasSemana: ['Segunda', 'Quarta', 'Sexta'], vagas: 20 },
-          { id: 9, nome: 'Natação B', horario: '18:00 - 19:00', diasSemana: ['Terça', 'Quinta'], vagas: 12 },
-        ],
-        '5': [ // Tênis
-          { id: 10, nome: 'Tênis Individual', horario: '15:00 - 16:00', diasSemana: ['Segunda', 'Quarta'], vagas: 8 },
-        ],
-        '6': [ // Judô
-          { id: 11, nome: 'Judô B', horario: '16:00 - 17:00', diasSemana: ['Terça', 'Quinta'], vagas: 16 },
-          { id: 12, nome: 'Judô A', horario: '19:00 - 20:30', diasSemana: ['Segunda', 'Quarta', 'Sexta'], vagas: 12 },
-        ],
-      };
-
-      const turmasData = mockTurmas[modalidadeId] || [];
-      setTurmas(turmasData);
+      // Simula um pequeno delay para mostrar o loading
+      setTimeout(() => {
+        const turmasFiltradas = allTurmas.filter(turma => turma.modalidade === modalidadeNome);
+        setTurmas(turmasFiltradas);
+        setLoading(false);
+      }, 300);
     } catch (error) {
-      console.error('Erro ao buscar turmas:', error);
-      // Aqui você pode adicionar tratamento de erro, como mostrar uma mensagem para o usuário
-    } finally {
+      console.error('Erro ao filtrar turmas:', error);
       setLoading(false);
     }
   };
@@ -96,7 +101,8 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
     setSelectedModalidade(modalidadeId);
     setModalidadeDropdownOpen(false);
     if (modalidadeId) {
-      fetchTurmas(modalidadeId);
+      const modalidadeNome = getModalidadeNome(modalidadeId);
+      filterTurmasByModalidade(modalidadeNome);
     } else {
       setTurmas([]);
       setSelectedTurmas([]);
@@ -111,23 +117,119 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
     );
   };
 
-  const handleContinuar = () => {
+  const handleContinuar = async () => {
     if (selectedTurmas.length === 0) {
-      alert('Por favor, selecione pelo menos uma turma.');
+      showAlert(
+        'warning',
+        'Selecione pelo menos uma turma para continuar.',
+        'Seleção Necessária',
+        3000
+      );
       return;
     }
 
-    const dadosCadastro = {
-      modalidadeId: selectedModalidade,
-      turmasIds: selectedTurmas,
-    };
+    if (!user?.token) {
+      showAlert(
+        'error',
+        'Token de autenticação não encontrado. Faça login novamente.',
+        'Erro de Autenticação',
+        3000
+      );
+      return;
+    }
 
-    console.log('Dados do cadastro:', dadosCadastro);
-    alert(`Cadastro realizado com sucesso! Turmas selecionadas: ${selectedTurmas.length}`);
+    setSubmitting(true);
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      
+      // Fazer inscrição para cada turma selecionada
+      const inscricoes = selectedTurmas.map(async (turmaId) => {
+        return axios.put(
+          `${apiUrl}/user/inscricao`,
+          { TurmaID: turmaId },
+          {
+            headers: {
+              'Authorization': `Bearer ${user.token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      });
+
+      // Aguardar todas as inscrições serem processadas
+      await Promise.all(inscricoes);
+
+      showAlert(
+        'success',
+        `Você foi inscrito com sucesso em ${selectedTurmas.length} turma(s)!`,
+        'Inscrição Realizada',
+        3000
+      );
+      
+      // Limpar seleções após sucesso
+      setSelectedTurmas([]);
+      setSelectedModalidade('');
+      setTurmas([]);
+      
+    } catch (error) {
+      console.error('Erro ao realizar inscrição:', error);
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          showAlert(
+            'error',
+            'Token de autenticação inválido. Faça login novamente.',
+            'Erro de Autenticação',
+            4000
+          );
+        } else if (error.response?.status === 400) {
+          showAlert(
+            'error',
+            'Dados inválidos ou turma já está lotada.',
+            'Erro na Inscrição',
+            4000
+          );
+        } else if (error.response?.status === 409) {
+          showAlert(
+            'warning',
+            'Você já está inscrito em uma ou mais turmas selecionadas.',
+            'Inscrição Duplicada',
+            4000
+          );
+        } else {
+          showAlert(
+            'error',
+            error.response?.data?.message || 'Erro desconhecido ao realizar inscrição.',
+            'Erro na Inscrição',
+            4000
+          );
+        }
+      } else {
+        showAlert(
+          'error',
+          'Erro de conexão. Verifique sua internet e tente novamente.',
+          'Erro de Conexão',
+          4000
+        );
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getModalidadeNome = (id: string) => {
     return modalidades.find(m => m.id.toString() === id)?.nome || '';
+  };
+
+  const formatHorario = (horarioInicio: string, horarioFim: string) => {
+    return `${horarioInicio} - ${horarioFim}`;
+  };
+
+  const formatDiasSemana = (diaSemana: string) => {
+    // Se o backend retornar apenas um dia, você pode ajustar esta função
+    // para lidar com múltiplos dias se necessário
+    return [diaSemana];
   };
 
   const handleGoBack = () => {
@@ -137,6 +239,17 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       navigate(-1);
     }
   };
+
+  // Se ainda está carregando os dados iniciais, mostra o componente Loading
+  if (initialLoading) {
+    return (
+      <MainContainer>
+        <div className="w-full h-full flex items-center justify-center">
+          <Loading />
+        </div>
+      </MainContainer>
+    );
+  }
 
   return (
     <MainContainer>
@@ -209,27 +322,34 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
                 <div className="p-1">
                   {turmas.map((turma) => (
                     <div
-                      key={turma.id}
-                      className={`p-4 m-1 rounded border cursor-pointer transition-colors ${selectedTurmas.includes(turma.id)
+                      key={turma.turma_id}
+                      className={`p-4 m-1 rounded border cursor-pointer transition-colors ${selectedTurmas.includes(turma.turma_id)
                         ? 'bg-yellow-100 border-yellow-300'
                         : 'bg-white border-gray-300 hover:bg-gray-50'
                         }`}
-                      onClick={() => handleTurmaToggle(turma.id)}
+                      onClick={() => handleTurmaToggle(turma.turma_id)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{turma.nome}</h3>
-                          <p className="text-sm text-gray-600 mt-1">{turma.horario}</p>
-                          <p className="text-sm text-gray-600">{turma.diasSemana.join(', ')}</p>
+                          <h3 className="font-medium text-gray-900">{turma.sigla}</h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {formatHorario(turma.horario_inicio, turma.horario_fim)}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {formatDiasSemana(turma.dia_semana).join(', ')}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Local: {turma.local}
+                          </p>
                           <p className="text-sm text-green-600 mt-1">
-                            {turma.vagas} vagas disponíveis
+                            {turma.limite_inscritos} vagas disponíveis
                           </p>
                         </div>
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedTurmas.includes(turma.id)
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedTurmas.includes(turma.turma_id)
                           ? 'bg-yellow-500 border-yellow-500'
                           : 'border-gray-300'
                           }`}>
-                          {selectedTurmas.includes(turma.id) && (
+                          {selectedTurmas.includes(turma.turma_id) && (
                             <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
@@ -244,9 +364,9 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
           </div>
 
           <Button
-            text='Continuar'
+            text={submitting ? 'Inscrevendo...' : 'Continuar'}
             onClick={handleContinuar}
-            disabled={selectedTurmas.length === 0}
+            disabled={selectedTurmas.length === 0 || submitting}
             />
         </div>
 
@@ -258,10 +378,10 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
             </h3>
             <ul className="text-sm text-yellow-800">
               {selectedTurmas.map(turmaId => {
-                const turma = turmas.find(t => t.id === turmaId);
+                const turma = turmas.find(t => t.turma_id === turmaId);
                 return turma ? (
                   <li key={turmaId} className="mb-1">
-                    • {turma.nome} - {turma.horario}
+                    • {turma.sigla} - {formatHorario(turma.horario_inicio, turma.horario_fim)}
                   </li>
                 ) : null;
               })}
