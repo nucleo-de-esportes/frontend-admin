@@ -44,7 +44,7 @@ useEffect(() => {
 
   axios.get(`turmas/${id}`,{
     headers: {
-      'Authorization': user?.token
+      'Authorization': `Bearer ${user?.token}`
     }
   }).then(response => {
     const turmaData = Array.isArray(response.data) ? response.data[0] : response.data;
@@ -212,7 +212,11 @@ useEffect(() => {
       };
       
       console.log("Tentando enviar json:", json);
-      await axios.put(`/turmas/${id}`, json);
+      await axios.put(`/turmas/${id}`, json, {
+        headers: {
+          'Authorization': `Bearer ${user?.token}`
+        }
+      });
       alert("Edição realizada com sucesso!");
       navigate("/turmas");
     } catch (error) {
@@ -229,7 +233,11 @@ useEffect(() => {
     }
 
     try {
-      await axios.delete(`/turmas/${id}`);
+      await axios.delete(`/turmas/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${user?.token}`
+        }
+      });
       alert("Turma removida com sucesso!");
       navigate("/turmas");
     } catch (error) {

@@ -6,6 +6,7 @@ import MainContainer from '../components/MainContainer';
 import Button from '../components/Button';
 import Title from '../components/Title';
 import Loading from '../components/Loading';
+import { useAuth } from '../hooks/useAuth';
 
 interface Modalidade {
   id: number;
@@ -29,6 +30,7 @@ interface ClassEnrollmentFormProps {
 
 const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedModalidade, setSelectedModalidade] = useState<string>('');
   const [modalidades, setModalidades] = useState<Modalidade[]>([]);
   const [turmas, setTurmas] = useState<Turma[]>([]);
@@ -36,6 +38,7 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
   const [selectedTurmas, setSelectedTurmas] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [modalidadeDropdownOpen, setModalidadeDropdownOpen] = useState(false);
 
   // Buscar todas as turmas do backend
@@ -107,19 +110,60 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
     );
   };
 
-  const handleContinuar = () => {
+  const handleContinuar = async () => {
     if (selectedTurmas.length === 0) {
       alert('Por favor, selecione pelo menos uma turma.');
       return;
     }
 
-    const dadosCadastro = {
-      modalidadeId: selectedModalidade,
-      turmasIds: selectedTurmas,
-    };
+    setSubmitting(true);
 
-    console.log('Dados do cadastro:', dadosCadastro);
-    alert(`Cadastro realizado com sucesso! Turmas selecionadas: ${selectedTurmas.length}`);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      
+      // Fazer inscrição para cada turma selecionada
+      const inscricoes = selectedTurmas.map(async (turmaId) => {
+        return axios.post(
+          `${apiUrl}/user/inscricao`,
+          { TurmaID: turmaId },
+          {
+            headers: {
+              'Authorization': `Bearer ${user?.token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      });
+
+      // Aguardar todas as inscrições serem processadas
+      await Promise.all(inscricoes);
+
+      alert(`Inscrição realizada com sucesso! Você foi inscrito em ${selectedTurmas.length} turma(s).`);
+      
+      // Limpar seleções após sucesso
+      setSelectedTurmas([]);
+      setSelectedModalidade('');
+      setTurmas([]);
+      
+    } catch (error) {
+      console.error('Erro ao realizar inscrição:', error);
+      
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert('Erro: Token de autenticação inválido. Faça login novamente.');
+        } else if (error.response?.status === 400) {
+          alert('Erro: Dados inválidos ou turma já está lotada.');
+        } else if (error.response?.status === 409) {
+          alert('Erro: Você já está inscrito em uma ou mais turmas selecionadas.');
+        } else {
+          alert(`Erro ao realizar inscrição: ${error.response?.data?.message || 'Erro desconhecido'}`);
+        }
+      } else {
+        alert('Erro de conexão. Verifique sua internet e tente novamente.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getModalidadeNome = (id: string) => {
@@ -268,9 +312,9 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
           </div>
 
           <Button
-            text='Continuar'
+            text={submitting ? 'Inscrevendo...' : 'Continuar'}
             onClick={handleContinuar}
-            disabled={selectedTurmas.length === 0}
+            disabled={selectedTurmas.length === 0 || submitting}
             />
         </div>
 
