@@ -6,12 +6,17 @@ import Button from "../components/Button";
 import Form from "../components/Form";
 import axios from "axios"
 import React from "react";
+import Loading from '../components/Loading';
+import { useApiAlert } from "../hooks/useApiAlert";
 import { useAuth } from "../hooks/useAuth";
 import { useParams, useNavigate } from 'react-router-dom';
 import { TimeInputRef } from "../components/TimeInput"; 
 import { FaSave, FaTrash } from "react-icons/fa";
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const ClassForm = () => {
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedModalidade, setSelectedModalidade] = useState("");
   const [selectedProfessor, setSelectedProfessor] = useState("");
   const [selectedLocal, setSelectedLocal] = useState("");
@@ -38,13 +43,16 @@ const ClassForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const { showAlert } = useApiAlert();
   
 useEffect(() => {
+  setLoading(true);
   if (!modalidadesCarregadas || !locaisCarregados) return;
 
   axios.get(`turmas/${id}`,{
     headers: {
-      'Authorization': user?.token
+      'Authorization': `Bearer ${user?.token}`
     }
   }).then(response => {
     const turmaData = Array.isArray(response.data) ? response.data[0] : response.data;
@@ -59,6 +67,7 @@ useEffect(() => {
 
     const local = localOptions.find(loc => loc.label === turmaData.local);
     if (local) setSelectedLocal(local.value);
+    setLoading(false);
 
   }).catch(error => {
     console.error('Erro ao carregar turma:', error);
@@ -212,8 +221,17 @@ useEffect(() => {
       };
       
       console.log("Tentando enviar json:", json);
-      await axios.put(`/turmas/${id}`, json);
-      alert("Edição realizada com sucesso!");
+      await axios.put(`/turmas/${id}`, json, {
+    headers: {
+      'Authorization': `Bearer ${user?.token}`
+    }
+  });
+      showAlert(
+        'success', 
+        'Edição realizada com sucesso!', 
+        'Edição Realizada',
+        2000
+      )
       navigate("/turmas");
     } catch (error) {
       console.error("Erro ao editar:", error);
@@ -229,8 +247,17 @@ useEffect(() => {
     }
 
     try {
-      await axios.delete(`/turmas/${id}`);
-      alert("Turma removida com sucesso!");
+      await axios.delete(`/turmas/${id}`,{
+    headers: {
+      'Authorization': `Bearer ${user?.token}`
+    }
+  });
+      showAlert(
+        'warning', 
+        'Remoção realizada com sucesso!', 
+        'Remoção Realizada',
+        2000
+      )
       navigate("/turmas");
     } catch (error) {
       console.error("Erro ao remover turma:", error);
@@ -263,6 +290,18 @@ useEffect(() => {
   const handleFimNavigatePrevious = () => {
     horarioInicioRef.current?.focusEnd();
   };
+
+    if (loading) {
+        return (
+            <div className="bg-[#E4E4E4] min-h-screen flex flex-col justify-between">
+                <Header />
+                <main className="flex-grow bg-gray-100 flex items-center justify-center">
+                    <Loading />
+                </main>
+                <Footer />
+            </div>
+        );
+    }
 
   return (
     <MainContainer>
