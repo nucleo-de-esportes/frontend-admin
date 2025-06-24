@@ -33,7 +33,7 @@ const ClassForm = () => {
 
   const horarioInicioRef = useRef<TimeInputRef>(null);
   const horarioFimRef = useRef<TimeInputRef>(null);
-
+  
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
 
