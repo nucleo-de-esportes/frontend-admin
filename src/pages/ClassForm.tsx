@@ -26,6 +26,9 @@ const ClassForm = () => {
   const [limiteError, setLimiteError] = useState("");
   const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
 
+  const [modalidadesLoading, setModalidadesLoading] = useState(true);
+  const [locaisLoading, setLocaisLoading] = useState(true);
+
   const horarioInicioRef = useRef<TimeInputRef>(null);
   const horarioFimRef = useRef<TimeInputRef>(null);
 
@@ -39,6 +42,7 @@ const ClassForm = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    setModalidadesLoading(true);
     axios.get<{ modalidade_id: number; nome: string; valor: number }[]>('/cad/mod')
       .then(response => {
         const formatted = response.data.map(mod => ({
@@ -49,6 +53,27 @@ const ClassForm = () => {
       })
       .catch(error => {
         console.error('Erro ao carregar modalidades:', error);
+      })
+      .finally(() => {
+        setModalidadesLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    setLocaisLoading(true);
+    axios.get<{ local_id: number; nome: string; campus: string }[]>('/cad/local')
+      .then(response => {
+        const formatted = response.data.map(loc => ({
+          value: loc.local_id.toString(),
+          label: loc.nome
+        }));
+        setLocalOptions(formatted);
+      })
+      .catch(error => {
+        console.error('Erro ao carregar locais:', error);
+      })
+      .finally(() => {
+        setLocaisLoading(false); 
       });
   }, []);
 
@@ -83,20 +108,6 @@ const ClassForm = () => {
       !validateLimite(limite)
     );
   };
-
-  useEffect(() => {
-    axios.get<{ local_id: number; nome: string; campus: string }[]>('/cad/local')
-      .then(response => {
-        const formatted = response.data.map(loc => ({
-          value: loc.local_id.toString(),
-          label: loc.nome
-        }));
-        setLocalOptions(formatted);
-      })
-      .catch(error => {
-        console.error('Erro ao carregar locais:', error);
-      });
-  }, []);
 
   const Dias = [
     { value: "option1", label: "Opção 1" },
@@ -185,7 +196,8 @@ const ClassForm = () => {
         horario_fim: horarioFim,
         limite_inscritos: parseInt(limite, 10),
         dia_semana: selectedDia,
-        sigla: selectedModalidade,
+        // Assuming 'sigla' is derived from selectedModalidade, you might need to adjust this based on your backend
+        sigla: modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '', 
         local_id: parseInt(selectedLocal, 10),
         modalidade_id: parseInt(selectedModalidade, 10),
       };
@@ -239,14 +251,26 @@ const ClassForm = () => {
     <MainContainer>
       <Form title="CADASTRO DE TURMA" className="w-screen">
 
-        <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={modalidadeOptions} />
+        <Select 
+          value={selectedModalidade} 
+          onChange={setSelectedModalidade} 
+          label="Modalidade" 
+          options={modalidadeOptions}
+          loading={modalidadesLoading} // Spinner in dropdown while loading and open
+        />
         
         {/* Só mostra o select de professor se a modalidade estiver selecionada e não for nado livre */}
         {selectedModalidade && !isNadoLivre() && (
           <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
         )}
         
-        <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={localOptions} />
+        <Select 
+          value={selectedLocal} 
+          onChange={setSelectedLocal} 
+          label="Local" 
+          options={localOptions}
+          loading={locaisLoading} // Spinner in dropdown while loading and open
+        />
 
         <div className="flex flex-col w-full">
           <p className="font-semibold text-2xl mb-2">Horário</p>

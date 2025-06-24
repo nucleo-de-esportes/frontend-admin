@@ -15,9 +15,10 @@ interface SelectProps {
     label?: string;
     name?: string;
     disabled?: boolean;
+    loading?: boolean; // Keep this prop to disable the button if needed, but it won't control the dropdown spinner directly
 }
 
-export function Select({ placeholder = 'Selecione uma opção', disabled = false, ...props }: SelectProps) {
+export function Select({ placeholder = 'Selecione uma opção', disabled = false, loading = false, ...props }: SelectProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     const selectedOption = props.options.find(option => option.value === props.value);
@@ -64,19 +65,29 @@ export function Select({ placeholder = 'Selecione uma opção', disabled = false
             {isOpen && (
                 <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200">
                     <ul className="py-1 max-h-60 overflow-auto">
-                        {props.options.map((option) => (
-                            <li
-                                key={option.value}
-                                onClick={() => handleSelect(option)}
-                                className={`
-                                    px-4 py-2 cursor-pointer select-none
-                                    hover:bg-purple-50 hover:text-[#662C92]
-                                    ${option.value === props.value ? 'bg-purple-50 text-[#662C92]' : 'text-gray-900'}
-                                `}
-                            >
-                                {option.label}
+                        {loading ? ( 
+                            <li className="px-4 py-2 text-gray-500 flex items-center justify-center">
+                                <div className="flex items-center justify-center h-48">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+                                </div>
                             </li>
-                        ))}
+                        ) : props.options.length === 0 ? (
+                            <li className="px-4 py-2 text-gray-500 text-center">Nenhuma opção disponível</li>
+                        ) : (
+                            props.options.map((option) => (
+                                <li
+                                    key={option.value}
+                                    onClick={() => handleSelect(option)}
+                                    className={`
+                                        px-4 py-2 cursor-pointer select-none
+                                        hover:bg-purple-50 hover:text-[#662C92]
+                                        ${option.value === props.value ? 'bg-purple-50 text-[#662C92]' : 'text-gray-900'}
+                                    `}
+                                >
+                                    {option.label}
+                                </li>
+                            ))
+                        )}
                     </ul>
                 </div>
             )}
