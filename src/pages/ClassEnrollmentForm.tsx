@@ -145,9 +145,9 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       
       // Fazer inscrição para cada turma selecionada
       const inscricoes = selectedTurmas.map(async (turmaId) => {
-        return axios.put(
+        return axios.post(
           `${apiUrl}/user/inscricao`,
-          { TurmaID: turmaId },
+          { "turma_id": turmaId },
           {
             headers: {
               'Authorization': `Bearer ${user.token}`,
@@ -172,6 +172,7 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       setSelectedModalidade('');
       setTurmas([]);
       
+      navigate("/turmas")
     } catch (error) {
       console.error('Erro ao realizar inscrição:', error);
       
@@ -319,7 +320,7 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
                   {selectedModalidade ? 'Nenhuma turma disponível' : 'Selecione uma modalidade primeiro'}
                 </div>
               ) : (
-                <div className="p-1">
+                <div className="p-1 h-72 overflow-y-auto">
                   {turmas.map((turma) => (
                     <div
                       key={turma.turma_id}
