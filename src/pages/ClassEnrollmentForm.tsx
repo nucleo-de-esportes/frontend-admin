@@ -8,21 +8,11 @@ import Title from '../components/Title';
 import Loading from '../components/Loading';
 import { useAuth } from '../hooks/useAuth';
 import { useApiAlert } from '../hooks/useApiAlert';
+import { Turma } from '../types/Class';
 
 interface Modalidade {
   id: number;
   nome: string;
-}
-
-interface Turma {
-  turma_id: number;
-  modalidade: string;
-  sigla: string;
-  dia_semana: string;
-  horario_inicio: string;
-  horario_fim: string;
-  limite_inscritos: number;
-  local: string;
 }
 
 interface ClassEnrollmentFormProps {
@@ -145,9 +135,9 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       
       // Fazer inscrição para cada turma selecionada
       const inscricoes = selectedTurmas.map(async (turmaId) => {
-        return axios.put(
+        return axios.post(
           `${apiUrl}/user/inscricao`,
-          { TurmaID: turmaId },
+          { "turma_id": turmaId },
           {
             headers: {
               'Authorization': `Bearer ${user.token}`,
@@ -172,6 +162,7 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
       setSelectedModalidade('');
       setTurmas([]);
       
+      navigate("/turmas")
     } catch (error) {
       console.error('Erro ao realizar inscrição:', error);
       
@@ -319,7 +310,7 @@ const ClassEnrollmentForm: React.FC<ClassEnrollmentFormProps> = ({ onBack }) => 
                   {selectedModalidade ? 'Nenhuma turma disponível' : 'Selecione uma modalidade primeiro'}
                 </div>
               ) : (
-                <div className="p-1">
+                <div className="p-1 h-72 overflow-y-auto">
                   {turmas.map((turma) => (
                     <div
                       key={turma.turma_id}
