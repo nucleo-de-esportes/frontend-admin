@@ -10,6 +10,11 @@ import FiltroDeTurmas from '../components/FiltroDeTurmas';
 import Loading from '../components/Loading';
 import MainContainer from '../components/MainContainer';
 import { Turma } from '../types/Class';
+import { useAuth } from '../hooks/useAuth';
+
+interface response {
+    turmas: Turma[]
+}
 
 export default function ClassViewUser() {
     const [turmas, setTurmas] = useState<Turma[]>([]);
@@ -17,6 +22,8 @@ export default function ClassViewUser() {
     const [filtroAberto, setFiltroAberto] = useState(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+
+    const { user } = useAuth();
 
     const fetchTurmas = async () => {
         setLoading(true);
@@ -26,9 +33,13 @@ export default function ClassViewUser() {
             if (!apiUrl) {
                 throw new Error("Variável de ambiente VITE_API_URL não está definida.");
             }
-            const response = await axios.get<Turma[]>(`${apiUrl}/aluno/turmas`);
-            setTurmas(response.data);
-            setTurmasFiltradas(response.data);
+            const response = await axios.get<response>(`${apiUrl}/user/turmas`, {
+            headers: {
+              'Authorization': `Bearer ${user?.token}`
+            }
+          });
+            setTurmas(response.data.turmas);
+            setTurmasFiltradas(response.data.turmas);
         } catch (err) {
             console.error("Erro ao buscar turmas:", err);
             if (axios.isAxiosError(err)) {
