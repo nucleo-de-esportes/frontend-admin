@@ -38,8 +38,16 @@ export default function ClassViewUser() {
               'Authorization': `Bearer ${user?.token}`
             }
           });
-            setTurmas(response.data.turmas);
-            setTurmasFiltradas(response.data.turmas);
+
+            const turmasProcessadas = response.data.turmas.map(turma => ({
+                ...turma,
+                local: typeof turma.local === 'object' && turma.local !== null ? (turma.local as { nome: string }).nome : turma.local,
+                modalidade: typeof turma.modalidade === 'object' && turma.modalidade !== null ? (turma.modalidade as { nome: string }).nome : turma.modalidade,
+            })) as Turma[];
+
+
+            setTurmas(turmasProcessadas);
+            setTurmasFiltradas(turmasProcessadas);
         } catch (err) {
             console.error("Erro ao buscar turmas:", err);
             if (axios.isAxiosError(err)) {
