@@ -8,21 +8,11 @@ import Title from '../components/Title';
 import Loading from '../components/Loading';
 import { useAuth } from '../hooks/useAuth';
 import { useApiAlert } from '../hooks/useApiAlert';
+import { Turma } from '../types/Class';
 
 interface Modalidade {
   id: number;
   nome: string;
-}
-
-interface Turma {
-  turma_id: number;
-  modalidade: string;
-  sigla: string;
-  dia_semana: string;
-  horario_inicio: string;
-  horario_fim: string;
-  limite_inscritos: number;
-  local: string;
 }
 
 interface ClassEnrollmentFormProps {
