@@ -1,43 +1,44 @@
+// TimeInput.tsx
+import { TextFieldProps } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { TimeRangePicker } from "@mui/x-date-pickers-pro/TimeRangePicker";
-import { TextFieldProps } from "@mui/material/TextField";
-import dayjs, { Dayjs } from "dayjs";
-import "dayjs/locale/pt-br";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { Dayjs } from "dayjs";
 
-interface TimeRangeInputProps {
-  value: [Dayjs | null, Dayjs | null];
-  onChange: (newValue: [Dayjs | null, Dayjs | null]) => void;
+interface TimeInputProps {
+  format: string;
+  label: string;
+  value: Dayjs | null;
+  onChange: (newValue: Dayjs | null) => void;
+  error?: boolean;
+  helperText?: string;
+  textFieldProps?: Partial<TextFieldProps>;
 }
 
-export default function TimeRangeInput({ value, onChange }: TimeRangeInputProps) {
-  const hasError =
-    value[0] && value[1] && dayjs(value[0]).isAfter(dayjs(value[1]));
-
+export default function TimeInput({
+  format,
+  label,
+  value,
+  onChange,
+  error,
+  helperText,
+  textFieldProps,
+}: TimeInputProps) {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="pt-br">
-      <TimeRangePicker
+      <TimePicker
+        format={format}
+        label={label}
         value={value}
         onChange={onChange}
-        format="HH:mm"
-        localeText={{ start: "Horário de Início", end: "Horário de Fim" }}
         slotProps={{
-          textField: [
-            {
-              fullWidth: true,
-              margin: "normal",
-              label: "Início",
-            },
-            {
-              fullWidth: true,
-              margin: "normal",
-              label: "Fim",
-              error: hasError,
-              helperText: hasError
-                ? "O horário de fim deve ser maior que o de início"
-                : "",
-            },
-          ] as unknown as TextFieldProps, 
+          textField: {
+            fullWidth: true,
+            margin: "normal",
+            error,
+            helperText,
+            ...textFieldProps,
+          },
         }}
       />
     </LocalizationProvider>
