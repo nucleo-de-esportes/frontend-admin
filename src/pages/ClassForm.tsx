@@ -44,7 +44,6 @@ const ClassForm = () => {
 
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
   const [endTime, setEndTime] = useState<Dayjs | null>(null);
-
   const hasError = startTime && endTime && !startTime.isBefore(endTime);
   
   const [selectedDia, setSelectedDia] = useState<ComboBoxOption | null>(null);
@@ -53,8 +52,10 @@ const ClassForm = () => {
 
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: number, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: number; label: string }[]>([]);
-  const [selectedLocal, setSelectedL] = useState<{ value: number; label: string } | null>(null);
-  const [selectedModalidade, setSelectedM] = useState<{ value: number; label: string } | null>(null);
+  const [selectedLocal, setSelectedLocal] = useState<{ value: number; label: string } | null>(null);
+  const [selectedModalidade, setSelectedModalidade] = useState<{ value: number; label: string } | null>(null);
+
+  const isNadoLivre = selectedModalidade?.value === 6;
 
   const { user } = useAuth();
 
@@ -80,6 +81,12 @@ const ClassForm = () => {
     { value: 7, label: "Sábado" },
   ];
 
+  const handleModalidadeChange = (modalidade: { value: number; label: string } | null) => {
+    setSelectedModalidade(modalidade);
+    if (modalidade?.value === 6) {
+      setSelectedProfessor(null);
+    }
+  };  
 
   const validateLimite = (value: string): string => {
     if (!value) {
@@ -99,7 +106,14 @@ const ClassForm = () => {
 
     return (
       limite &&
-      !validateLimite(limite)
+      !validateLimite(limite) &&
+      startTime  &&
+      endTime &&
+      selectedDia &&
+      selectedModalidade &&
+      selectedLocal &&
+      (isNadoLivre || selectedProfessor) &&
+      !hasError
     );
   };
 
@@ -139,54 +153,57 @@ const ClassForm = () => {
       <Form title="CADASTRO DE TURMA" className="w-screen">
         <div className="flex flex-col w-full">
           <div className="flex flex-col w-full">
-      <TimeInput
-        format="HH:mm"
-        label="Início"
-        value={startTime}
-        onChange={setStartTime}
-      />
-      <TimeInput
-        format="HH:mm"
-        label="Fim"
-        value={endTime}
-        onChange={setEndTime}
-        error={hasError? hasError : undefined}
-        helperText={hasError ? "O horário de fim deve ser maior que o de início" : ""}
-      />
-      <ComboBox
-        label="Dias de Aula"
-        options={Dias}
-        value={selectedDia}
-        onChange={setSelectedDia}
-      />
-      <ComboBox
-        label="Professor"
-        options={Professores}
-        value={selectedProfessor}
-        onChange={setSelectedProfessor}
-      />
-      <ComboBox
-        label="Local"
-        options={localOptions}
-        value={selectedLocal}
-        onChange={setSelectedL}
-      />
-      <ComboBox
-        label="Modalidade"
-        options={modalidadeOptions}
-        value={selectedModalidade}
-        onChange={setSelectedM}
-      />
-      <NumberInput
-      label="Limite de Alunos"
-      value={limite}
-      helperText={<span className="text-red-500">{validateLimite(limite)}</span>}
-      onValueChange={(values) => {setLimite(values.value); console.log(limite)}}/>
+            <ComboBox
+              label="Modalidade"
+              options={modalidadeOptions}
+              value={selectedModalidade}
+              onChange={handleModalidadeChange}
+            />
+            {!isNadoLivre && (
+              <ComboBox
+                label="Professor"
+                options={Professores}
+                value={selectedProfessor}
+                onChange={setSelectedProfessor}
+              />
+            )}
+            <ComboBox
+              label="Local"
+              options={localOptions}
+              value={selectedLocal}
+              onChange={setSelectedLocal}
+            />
+            <div className="flex flex-row w-full justify-between">
+              <TimeInput
+                format="HH:mm"
+                label="Horário Início"
+                value={startTime}
+                onChange={setStartTime}
+              />
+              <TimeInput
+                format="HH:mm"
+                label="Horário Fim"
+                value={endTime}
+                onChange={setEndTime}
+                error={hasError? hasError : undefined}
+                helperText={hasError ? "O horário de fim deve ser maior que o de início" : ""}
+              />
+            </div>
+            <ComboBox
+              label="Dias de Aula"
+              options={Dias}
+              value={selectedDia}
+              onChange={setSelectedDia}
+            />
+            <NumberInput
+            label="Limite de Alunos"
+            value={limite}
+            helperText={<span className="text-red-500">{validateLimite(limite)}</span>}
+            onValueChange={(values) => {setLimite(values.value); console.log(limite)}}/>
           </div>
         </div>
         <Button text="Cadastrar" onClick={handleConfirmSubmit} disabled={!isFormValid()} />
       </Form>
-      
     </MainContainer>
   );
 };

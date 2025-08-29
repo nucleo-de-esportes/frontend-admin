@@ -1,10 +1,12 @@
 import React from "react";
 import { TextField, TextFieldProps } from "@mui/material";
 import { NumericFormat, NumericFormatProps } from "react-number-format";
+import type { SxProps, Theme } from "@mui/material/styles";
 
 type NumberInputProps = {
   label?: string;
   error?: boolean;
+  sx?: SxProps<Theme>;
   helperText?: React.ReactNode;
   variant?: TextFieldProps["variant"];
 } & Omit<NumericFormatProps<TextFieldProps>, "customInput" | "onValueChange"> & {
@@ -16,6 +18,7 @@ export default function NumberInput({
   error = false,
   helperText = "",
   variant = "outlined",
+  sx,
   onValueChange,
   ...props
 }: NumberInputProps) {
@@ -28,6 +31,7 @@ export default function NumberInput({
       helperText={helperText}
       variant={variant}
       onValueChange={onValueChange}
+      sx={{ width: '100%', mt: 1, ...sx }}
     />
   );
 }

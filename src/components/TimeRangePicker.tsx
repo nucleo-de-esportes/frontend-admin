@@ -4,10 +4,12 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { Dayjs } from "dayjs";
+import type { SxProps, Theme } from "@mui/material/styles";
 
 interface TimeInputProps {
   format: string;
   label: string;
+  sx?: SxProps<Theme>;
   value: Dayjs | null;
   onChange: (newValue: Dayjs | null) => void;
   error?: boolean;
@@ -21,6 +23,7 @@ export default function TimeInput({
   value,
   onChange,
   error,
+  sx,
   helperText,
   textFieldProps,
 }: TimeInputProps) {
@@ -40,6 +43,7 @@ export default function TimeInput({
             ...textFieldProps,
           },
         }}
+        sx={{ width: '47.5%', ...sx }}
       />
     </LocalizationProvider>
   );

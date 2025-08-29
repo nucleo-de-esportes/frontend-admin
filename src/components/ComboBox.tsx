@@ -37,7 +37,7 @@ export default function ComboBox({
         <TextField {...params} label={label} placeholder={placeholder} />
       )}
       disabled={disabled}
-      sx={{ width: 300, ...sx }}
+      sx={{ width: '100%', mt: 1, ...sx }}
     />
   );
 }
