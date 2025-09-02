@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import MainContainer from "../components/MainContainer";
 import { useAuth } from "../hooks/useAuth";
 import { useApiAlert } from "../hooks/useApiAlert";
-import TimeInput from "../components/TimeRangePicker"
+import TimeInput from "../components/TimeInput"
 import { Dayjs } from "dayjs";
 import ComboBox from "../components/ComboBox";
 import type { ComboBoxOption } from "../components/ComboBox";

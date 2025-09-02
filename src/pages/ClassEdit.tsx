@@ -1,6 +1,6 @@
 import Input from "../components/Input";
 import { Select } from "../components/Select";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect} from "react";
 import MainContainer from "../components/MainContainer";
 import Button from "../components/Button";
 import Form from "../components/Form";
@@ -10,13 +10,12 @@ import Loading from '../components/Loading';
 import { useApiAlert } from "../hooks/useApiAlert";
 import { useAuth } from "../hooks/useAuth";
 import { useParams, useNavigate } from 'react-router-dom';
-import { TimeInputRef } from "../components/TimeInput";
 import { FaSave, FaTrash } from "react-icons/fa";
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Title from '../components/Title';
 import ConfirmationModal from '../components/ConfirmationModal';
-import DeletionModal from '../components/DeletionModal'; // Import DeletionModal
+import DeletionModal from '../components/DeletionModal';
 
 const ClassForm = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,14 +28,9 @@ const ClassForm = () => {
   const [horarioFim, setHorarioFim] = useState("");
   const [limite, setLimite] = useState("");
   const [horarioError, setHorarioError] = useState("");
-  const [horarioInicioTouched, setHorarioInicioTouched] = useState(false);
-  const [horarioFimTouched, setHorarioFimTouched] = useState(false);
 
   const [limiteError, setLimiteError] = useState("");
   const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
-
-  const horarioInicioRef = useRef<TimeInputRef>(null);
-  const horarioFimRef = useRef<TimeInputRef>(null);
 
   const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
   const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
@@ -182,9 +176,6 @@ const ClassForm = () => {
   }, [selectedModalidade, modalidadeOptions]);
 
   useEffect(() => {
-    if (!horarioInicioTouched || !horarioFimTouched) {
-      return;
-    }
 
     if (!horarioInicio || !horarioFim) {
       setHorarioError("Campo obrigatório");
@@ -202,7 +193,7 @@ const ClassForm = () => {
     } else {
       setHorarioError("");
     }
-  }, [horarioInicio, horarioFim, horarioInicioTouched, horarioFimTouched]);
+  }, [horarioInicio, horarioFim]);
 
   useEffect(() => {
     if (shouldValidateLimite) {
@@ -311,13 +302,6 @@ const ClassForm = () => {
     setShouldValidateLimite(true);
   };
 
-  const handleInicioNavigateNext = () => {
-    horarioFimRef.current?.focusStart();
-  };
-
-  const handleFimNavigatePrevious = () => {
-    horarioInicioRef.current?.focusEnd();
-  };
 
   if (loading) {
     return (
@@ -384,27 +368,6 @@ const ClassForm = () => {
             <div className="flex flex-row flex-wrap justify-center gap-2 md:gap-32">
               <div className="flex flex-col w-full md:max-w-2xs">
                 <label className="font-semibold text-lg mb-1">Início</label>
-                <Input
-                  type="time"
-                  inputRef={horarioInicioRef}
-                  value={horarioInicio}
-                  placeholder="00:00"
-                  onChange={(e) => setHorarioInicio(e.target.value)}
-                  onBlur={() => setHorarioInicioTouched(true)}
-                  onNavigateNext={handleInicioNavigateNext}
-                />
-              </div>
-              <div className="flex flex-col w-full md:max-w-2xs">
-                <label className="font-semibold text-lg mb-1">Fim</label>
-                <Input
-                  type="time"
-                  inputRef={horarioFimRef}
-                  value={horarioFim}
-                  placeholder="23:59"
-                  onChange={(e) => setHorarioFim(e.target.value)}
-                  onBlur={() => setHorarioFimTouched(true)}
-                  onNavigatePrevious={handleFimNavigatePrevious}
-                />
               </div>
             </div>
             {horarioError && (
