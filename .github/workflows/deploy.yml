@@ -7,13 +7,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      OCI_CLI_USER: ${{ secrets.OCI_USER_ID }}
-      OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY_ID }}
-      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
-      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_API_PRIVATE_KEY }}
-      OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
-    
+   
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -32,9 +26,12 @@ jobs:
       
     - name: Push to OCI bucket
       uses: oracle-actions/run-oci-cli-command@v1.1.1
-      id: push
+      env:
+        OCI_CLI_USER: ${{ secrets.OCI_USER_ID }}
+        OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY_ID }}
+        OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+        OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_API_PRIVATE_KEY }}
+        OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
       with: 
-        command: 'oci os object bulk-upload --bucket-name ${{ secrets.OCI_BUCKET_NAME }} --namespace ${{ secrets.OCI_NAMESPACE }} --src-dir ./dist --overwrite'
-    - name: Show output
-      run: |
-        echo ${{ steps.push.outputs.output }} | jq .
+        command: 'oci os object bulk-upload --bucket-name ${{ secrets.OCI_BUCKET_NAME }} --namespace ${{ secrets.OCI_NAMESPACE }} --src-dir ./dist --overwrite --debug'
+        silent: false
