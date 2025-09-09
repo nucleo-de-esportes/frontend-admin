@@ -7,6 +7,12 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_USER_ID }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY_ID }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_API_PRIVATE_KEY }}
+      OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
     
     steps:
     - name: Checkout code
@@ -24,20 +30,11 @@ jobs:
     - name: Build React app
       run: npm run build
       
-    - name: Setup OCI CLI
-      uses: oracle-actions/configure-oci-cli@v1.0
-      with:
-        user: ${{ secrets.OCI_USER_ID }}
-        fingerprint: ${{ secrets.OCI_FINGERPRINT }}
-        tenancy: ${{ secrets.OCI_TENANCY_ID }}
-        region: ${{ secrets.OCI_REGION }}
-        api_key: ${{ secrets.OCI_API_PRIVATE_KEY }}
-        
-    - name: Sync build to OCI bucket
+    - name: Push to OCI bucket
+      uses: oracle-actions/run-oci-cli-command@v1.1.1
+      id: push
+      with: 
+        command: 'oci os object bulk-upload --bucket-name ${{ secrets.OCI_BUCKET_NAME }} --namespace ${{ secrets.OCI_NAMESPACE }} --src-dir ./dist --overwrite'
+    - name: Show output
       run: |
-        oci os object bulk-upload \
-          --bucket-name ${{ secrets.OCI_BUCKET_NAME }} \
-          --namespace ${{ secrets.OCI_NAMESPACE }} \
-          --object-prefix "" \
-          --overwrite \
-          --exclude "*.map"
+        echo ${{ steps.push.outputs.output }} | jq .
