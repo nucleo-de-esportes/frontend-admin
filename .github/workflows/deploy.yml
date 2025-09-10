@@ -2,7 +2,7 @@ name: Deploy React to OCI Bucket
 
 on:
   push:
-    branches: [ ci/SCRUM-26-pipeline-de-deploy ]
+    branches: [ main ]
 
 jobs:
   build-and-deploy:
