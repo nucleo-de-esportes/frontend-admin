@@ -1,45 +1,61 @@
 // ClassForm.tsx
-import Input from "../components/Input";
-import { Select } from "../components/Select";
-import { useState, useEffect, useRef } from "react";
+import { useState , useEffect} from "react";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import axios from "axios";
-import React from "react";
 import { useNavigate } from 'react-router-dom';
 import MainContainer from "../components/MainContainer";
-import { TimeInputRef } from "../components/TimeInput";
 import { useAuth } from "../hooks/useAuth";
 import { useApiAlert } from "../hooks/useApiAlert";
-import ConfirmationModal from "../components/ConfirmationModal"; 
+import TimeInput from "../components/TimeInput"
+import { Dayjs } from "dayjs";
+import ComboBox from "../components/ComboBox";
+import type { ComboBoxOption } from "../components/ComboBox";
+import NumberInput from "../components/NumberInput";
 
 const ClassForm = () => {
-  const [selectedModalidade, setSelectedModalidade] = useState("");
-  const [selectedProfessor, setSelectedProfessor] = useState("");
-  const [selectedLocal, setSelectedLocal] = useState("");
-  const [selectedDia, setSelectedDia] = useState("");
-  const [horarioInicio, setHorarioInicio] = useState("");
-  const [horarioFim, setHorarioFim] = useState("");
-  const [limite, setLimite] = useState("");
-  const [horarioError, setHorarioError] = useState("");
-  const [horarioInicioTouched, setHorarioInicioTouched] = useState(false);
-  const [horarioFimTouched, setHorarioFimTouched] = useState(false);
+  useEffect(() => {
+    axios.get<{ modalidade_id: number; nome: string; valor: number }[]>('/cad/mod')
+      .then(response => {
+        const options = response.data.map(res => ({
+          value: res.modalidade_id,
+          label: res.nome
+        }));
+        setModalidadeOptions(options);
+      })
+      .catch(error => {
+        console.error("Erro ao carregar as modalidades:", error);
+      });
+  }, []);
 
-  const [limiteError, setLimiteError] = useState("");
-  const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
+  useEffect(() => {
+    axios.get<{ local_id: number; nome: string}[]>('/cad/local')
+      .then(response => {
+        const options = response.data.map(res => ({
+          value: res.local_id,
+          label: res.nome
+        }));
+        setLocalOptions(options);
+      })
+      .catch(error => {
+        console.error("Erro ao carregar os locais:", error);
+      });
+  }, []);
 
-  const [modalidadesLoading, setModalidadesLoading] = useState(true);
-  const [locaisLoading, setLocaisLoading] = useState(true);
-
-  const horarioInicioRef = useRef<TimeInputRef>(null);
-  const horarioFimRef = useRef<TimeInputRef>(null);
+  const [startTime, setStartTime] = useState<Dayjs | null>(null);
+  const [endTime, setEndTime] = useState<Dayjs | null>(null);
+  const hasError = startTime && endTime && !startTime.isBefore(endTime);
   
-  const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
-  const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
+  const [selectedDia, setSelectedDia] = useState<ComboBoxOption | null>(null);
+  const [selectedProfessor, setSelectedProfessor] = useState<ComboBoxOption | null>(null);
+  const [limite, setLimite] = useState("");
 
-  // State for the confirmation modal
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
-  const [dataToConfirm, setDataToConfirm] = useState<any>(null); 
+  const [modalidadeOptions, setModalidadeOptions] = useState<{ value: number, label: string }[]>([]);
+  const [localOptions, setLocalOptions] = useState<{ value: number; label: string }[]>([]);
+  const [selectedLocal, setSelectedLocal] = useState<{ value: number; label: string } | null>(null);
+  const [selectedModalidade, setSelectedModalidade] = useState<{ value: number; label: string } | null>(null);
+
+  const isNadoLivre = selectedModalidade?.value === 6;
 
   const { user } = useAuth();
 
@@ -47,65 +63,30 @@ const ClassForm = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setModalidadesLoading(true);
-    axios.get<{ modalidade_id: number; nome: string; valor: number }[]>('/cad/mod')
-      .then(response => {
-        const formatted = response.data.map(mod => ({
-          value: mod.modalidade_id.toString(),
-          label: mod.nome
-        }));
-        setModalidadeOptions(formatted);
-      })
-      .catch(error => {
-        console.error('Erro ao carregar modalidades:', error);
-      })
-      .finally(() => {
-        setModalidadesLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    setLocaisLoading(true);
-    axios.get<{ local_id: number; nome: string; campus: string }[]>('/cad/local')
-      .then(response => {
-        const formatted = response.data.map(loc => ({
-          value: loc.local_id.toString(),
-          label: loc.nome
-        }));
-        setLocalOptions(formatted);
-      })
-      .catch(error => {
-        console.error('Erro ao carregar locais:', error);
-      })
-      .finally(() => {
-        setLocaisLoading(false);
-      });
-  }, []);
 
   const Professores = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
+    { value: 1, label: "Fulano da Silva" },
+    { value: 2, label: "Luiz Felipe III" },
+    { value: 3, label: "Ciclano" },
+    { value: 4, label: "Betrano" },
   ];
 
   const Dias = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
+    { value: 1, label: "Domingo" },
+    { value: 2, label: "Segunda" },
+    { value: 3, label: "Terça" },
+    { value: 4, label: "Quarta" },
+    { value: 5, label: "Quinta" },
+    { value: 6, label: "Sexta" },
+    { value: 7, label: "Sábado" },
   ];
 
-
-  const isNadoLivre = () => {
-    const modalidadeSelecionada = modalidadeOptions.find(mod => mod.value === selectedModalidade);
-    return modalidadeSelecionada?.label.toLowerCase().includes('nado livre') || false;
-  };
-
-  const isProfessorRequired = () => {
-    return selectedModalidade && !isNadoLivre();
-  };
+  const handleModalidadeChange = (modalidade: { value: number; label: string } | null) => {
+    setSelectedModalidade(modalidade);
+    if (modalidade?.value === 6) {
+      setSelectedProfessor(null);
+    }
+  };  
 
   const validateLimite = (value: string): string => {
     if (!value) {
@@ -113,10 +94,7 @@ const ClassForm = () => {
     }
 
     const num = parseInt(value);
-    if (isNaN(num)) {
-      return "Apenas números são permitidos";
-    }
-
+ 
     if (num < 5 || num > 30) {
       return "A quantidade de alunos deve estar entre 5 e 30";
     }
@@ -125,107 +103,30 @@ const ClassForm = () => {
   };
 
   const isFormValid = () => {
-    const professorValid = isProfessorRequired() ? selectedProfessor : true;
 
     return (
-      selectedModalidade &&
-      professorValid &&
-      selectedLocal &&
-      selectedDia &&
-      horarioInicio &&
-      horarioFim &&
-      !horarioError &&
       limite &&
-      !validateLimite(limite)
+      !validateLimite(limite) &&
+      startTime  &&
+      endTime &&
+      selectedDia &&
+      selectedModalidade &&
+      selectedLocal &&
+      (isNadoLivre || selectedProfessor) &&
+      !hasError
     );
   };
 
-  useEffect(() => {
-    if (isNadoLivre()) {
-      setSelectedProfessor("");
-    }
-  }, [selectedModalidade, modalidadeOptions]);
-
-  useEffect(() => {
-    if (!horarioInicioTouched || !horarioFimTouched) {
-      return;
-    }
-
-    if (!horarioInicio || !horarioFim) {
-      setHorarioError("Campo obrigatório");
-      return;
-    }
-
-    const [horaInicio, minInicio] = horarioInicio.split(":").map(Number);
-    const [horaFim, minFim] = horarioFim.split(":").map(Number);
-
-    const inicioEmMinutos = horaInicio * 60 + minInicio;
-    const fimEmMinutos = horaFim * 60 + minFim;
-
-    if (fimEmMinutos <= inicioEmMinutos) {
-      setHorarioError("O horário de fim deve ser maior que o horário de início");
-    } else {
-      setHorarioError("");
-    }
-  }, [horarioInicio, horarioFim, horarioInicioTouched, horarioFimTouched]);
-
-  useEffect(() => {
-    if (shouldValidateLimite) {
-      const error = validateLimite(limite);
-      setLimiteError(error);
-    } else {
-      setLimiteError("");
-    }
-  }, [limite, shouldValidateLimite]);
-
-  const handleShowConfirmation = () => {
-    setShouldValidateLimite(true);
-
-    if (!horarioInicio || !horarioFim) {
-      setHorarioError("Campo obrigatório");
-      return;
-    }
-
-    if (horarioError) {
-      alert(horarioError);
-      return;
-    }
-
-    const limiteValidationError = validateLimite(limite);
-    if (limiteValidationError) {
-      alert(limiteValidationError);
-      return;
-    }
-
-    // If all validations pass, prepare data for the modal and open it
-    const selectedModalidadeLabel = modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '';
-    const selectedProfessorLabel = Professores.find(prof => prof.value === selectedProfessor)?.label || '';
-    const selectedLocalLabel = localOptions.find(loc => loc.value === selectedLocal)?.label || '';
-    const selectedDiaLabel = Dias.find(dia => dia.value === selectedDia)?.label || '';
-
-    setDataToConfirm({
-      modalidade: selectedModalidadeLabel,
-      professor: isProfessorRequired() ? selectedProfessorLabel : undefined,
-      local: selectedLocalLabel,
-      dia: selectedDiaLabel,
-      horarioInicio: horarioInicio,
-      horarioFim: horarioFim,
-      limite: limite,
-    });
-    setIsConfirmationModalOpen(true);
-  };
-
   const handleConfirmSubmit = async () => {
-    setIsConfirmationModalOpen(false); // Close the modal
     try {
       const json = {
-        horario_inicio: horarioInicio,
-        horario_fim: horarioFim,
+        horario_inicio: startTime?.format("HH:mm"),
+        horario_fim: endTime?.format("HH:mm"),
         limite_inscritos: parseInt(limite, 10),
-        dia_semana: selectedDia,
-        sigla: modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '',
-        local_id: parseInt(selectedLocal, 10),
-        modalidade_id: parseInt(selectedModalidade, 10),
+        dia_semana: selectedDia?.label,
+        sigla: selectedModalidade?.label,
+        local_id: selectedLocal?.value,
+        modalidade_id: selectedModalidade?.value
       };
 
       console.log("Tentando enviar json:", json);
@@ -247,122 +148,62 @@ const ClassForm = () => {
     }
   };
 
-  const handleLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 2) {
-      setLimite(value);
-
-      if (value.length === 2) {
-        setShouldValidateLimite(true);
-      } else {
-        setShouldValidateLimite(false);
-        setLimiteError("");
-      }
-    }
-  };
-
-  const handleLimiteBlur = () => {
-    setShouldValidateLimite(true);
-  };
-
-  const handleInicioNavigateNext = () => {
-    horarioFimRef.current?.focusStart();
-  };
-
-  const handleFimNavigatePrevious = () => {
-    horarioInicioRef.current?.focusEnd();
-  };
-
   return (
     <MainContainer>
       <Form title="CADASTRO DE TURMA" className="w-screen">
-
-        <Select
-          value={selectedModalidade}
-          onChange={setSelectedModalidade}
-          label="Modalidade"
-          options={modalidadeOptions}
-          loading={modalidadesLoading}
-        />
-
-        {selectedModalidade && !isNadoLivre() && (
-          <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
-        )}
-
-        <Select
-          value={selectedLocal}
-          onChange={setSelectedLocal}
-          label="Local"
-          options={localOptions}
-          loading={locaisLoading}
-        />
-
         <div className="flex flex-col w-full">
-          <p className="font-semibold text-2xl mb-2">Horário</p>
           <div className="flex flex-col w-full">
-            <div className="flex flex-row flex-wrap justify-center gap-2 md:gap-32">
-              <div className="flex flex-col w-full md:max-w-2xs">
-                <label className="font-semibold text-lg mb-1">Início</label>
-                <Input
-                  type="time"
-                  inputRef={horarioInicioRef}
-                  value={horarioInicio}
-                  placeholder="00:00"
-                  onChange={(e) => setHorarioInicio(e.target.value)}
-                  onBlur={() => setHorarioInicioTouched(true)}
-                  onNavigateNext={handleInicioNavigateNext}
-                />
-              </div>
-              <div className="flex flex-col w-full md:max-w-2xs">
-                <label className="font-semibold text-lg mb-1">Fim</label>
-                <Input
-                  type="time"
-                  inputRef={horarioFimRef}
-                  value={horarioFim}
-                  placeholder="23:59"
-                  onChange={(e) => setHorarioFim(e.target.value)}
-                  onBlur={() => setHorarioFimTouched(true)}
-                  onNavigatePrevious={handleFimNavigatePrevious}
-                />
-              </div>
-            </div>
-            {horarioError && (
-              <div className="text-red-500 text-sm mt-1 w-full text-center">
-                {horarioError}
-              </div>
+            <ComboBox
+              label="Modalidade"
+              options={modalidadeOptions}
+              value={selectedModalidade}
+              onChange={handleModalidadeChange}
+            />
+            {!isNadoLivre && (
+              <ComboBox
+                label="Professor"
+                options={Professores}
+                value={selectedProfessor}
+                onChange={setSelectedProfessor}
+              />
             )}
+            <ComboBox
+              label="Local"
+              options={localOptions}
+              value={selectedLocal}
+              onChange={setSelectedLocal}
+            />
+            <div className="flex flex-row w-full justify-between">
+              <TimeInput
+                format="HH:mm"
+                label="Horário Início"
+                value={startTime}
+                onChange={setStartTime}
+              />
+              <TimeInput
+                format="HH:mm"
+                label="Horário Fim"
+                value={endTime}
+                onChange={setEndTime}
+                error={hasError? hasError : undefined}
+                helperText={hasError ? "O horário de fim deve ser maior que o de início" : ""}
+              />
+            </div>
+            <ComboBox
+              label="Dias de Aula"
+              options={Dias}
+              value={selectedDia}
+              onChange={setSelectedDia}
+            />
+            <NumberInput
+            label="Limite de Alunos"
+            value={limite}
+            helperText={<span className="text-red-500">{validateLimite(limite)}</span>}
+            onValueChange={(values) => {setLimite(values.value); console.log(limite)}}/>
           </div>
         </div>
-
-        <Select value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
-
-        <div className="flex flex-col w-full">
-          <Input
-            value={limite}
-            onChange={handleLimiteChange}
-            onBlur={handleLimiteBlur}
-            label="Limite de Alunos"
-            placeholder="Quantidade"
-          />
-          {limiteError && (
-            <div className="text-red-500 text-sm mt-1">
-              {limiteError}
-            </div>
-          )}
-        </div>
-
-        <Button text="Cadastrar" onClick={handleShowConfirmation} disabled={!isFormValid()} />
+        <Button text="Cadastrar" onClick={handleConfirmSubmit} disabled={!isFormValid()} />
       </Form>
-
-      {/* Confirmation Modal */}
-      {isConfirmationModalOpen && dataToConfirm && (
-        <ConfirmationModal
-          isOpen={isConfirmationModalOpen}
-          onClose={() => setIsConfirmationModalOpen(false)}
-          onConfirm={handleConfirmSubmit}
-          data={dataToConfirm}
-        />
-      )}
     </MainContainer>
   );
 };
