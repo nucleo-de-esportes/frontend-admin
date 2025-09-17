@@ -1,0 +1,36 @@
+name: Deploy React to OCI Bucket
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+   
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build React app
+      run: npm run build
+      
+    - name: Push to OCI bucket
+      uses: oracle-actions/run-oci-cli-command@v1.1.1
+      env:
+        OCI_CLI_USER: ${{ secrets.OCI_USER_ID }}
+        OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY_ID }}
+        OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+        OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_API_PRIVATE_KEY }}
+        OCI_CLI_REGION: ${{ secrets.OCI_REGION }}
+      with: 
+        command: 'oci os object bulk-upload --bucket-name ${{ secrets.OCI_BUCKET_NAME }} --namespace ${{ secrets.OCI_NAMESPACE }} --src-dir ./dist --overwrite'
