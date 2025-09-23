@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useApiAlert } from "../hooks/useApiAlert";
 import Button from "../components/Button";
 import Form from "../components/Form";
-import Input from "../components/Input";
+import TextInput from "../components/TextInput";
 import MainContainer from "../components/MainContainer";
 
 const emailValidationSchema = z.string().email("Formato de E-mail inválido");
@@ -26,9 +26,6 @@ const UserRegister = () => {
         password: ""
     });
     const [loading, setLoading] = useState(false);
-    const [isEmailValid, setIsEmailValid] = useState(false);
-    const [isPasswordValid, setIsPasswordValid] = useState(false);
-    const [isNameValid, setIsNameValid] = useState(false);
     
     const navigate = useNavigate();
     const { showAlert } = useApiAlert();
@@ -41,6 +38,17 @@ const UserRegister = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        // Validação final antes do envio
+        const nameResult = nameValidationSchema.safeParse(formData.name);
+        const emailResult = emailValidationSchema.safeParse(formData.email);
+        const passwordResult = passwordValidationSchema.safeParse(formData.password);
+
+        if (!nameResult.success || !emailResult.success || !passwordResult.success) {
+            showAlert('error', 'Por favor, corrija os erros no formulário antes de enviar.', 'Erro de Validação');
+            setLoading(false);
+            return;
+        }
 
         try {
             await axios.post(import.meta.env.VITE_API_URL + "/user/register", {
@@ -79,49 +87,45 @@ const UserRegister = () => {
         }
     };
 
-    const isDisabled =
-        loading ||
-        !isEmailValid ||
-        !isPasswordValid ||
-        !isNameValid ||
-        !formData.email.trim() ||
-        !formData.password.trim() ||
-        !formData.name.trim();
+    // Verificar se todos os campos são válidos para habilitar o botão
+    const isFormValid = () => {
+        const nameResult = nameValidationSchema.safeParse(formData.name);
+        const emailResult = emailValidationSchema.safeParse(formData.email);
+        const passwordResult = passwordValidationSchema.safeParse(formData.password);
+        
+        return nameResult.success && emailResult.success && passwordResult.success;
+    };
+
+    const isDisabled = loading || !isFormValid();
 
     return (
         <MainContainer>
             <Form title="Núcleo de Esportes" onSubmit={handleSubmit}>
-                <Input
+                <TextInput
                     label="Nome Completo"
-                    placeholder="Seu nome completo"
                     name="name"
                     type="text"
                     value={formData.name}
-                    validation={nameValidationSchema}
                     onChange={handleInputChange}
-                    onValidationChange={setIsNameValid}
+                    validation={nameValidationSchema}
                 />
                 
-                <Input
+                <TextInput
                     label="Email"
-                    placeholder="E-mail"
                     name="email"
-                    type="text"
+                    type="email"
                     value={formData.email}
-                    validation={emailValidationSchema}
                     onChange={handleInputChange}
-                    onValidationChange={setIsEmailValid}
+                    validation={emailValidationSchema}
                 />
 
-                <Input
-                    type="password"
+                <TextInput
                     label="Senha"
-                    placeholder="Senha"
                     name="password"
+                    type="password"
                     value={formData.password}
                     onChange={handleInputChange}
                     validation={passwordValidationSchema}
-                    onValidationChange={setIsPasswordValid}
                 />
 
                 <div className="flex flex-col w-full items-center gap-2 mt-8">

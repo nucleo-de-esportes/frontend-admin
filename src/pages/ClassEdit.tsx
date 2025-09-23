@@ -1,60 +1,116 @@
-import Input from "../components/Input";
-import { Select } from "../components/Select";
-import { useState, useEffect} from "react";
-import MainContainer from "../components/MainContainer";
+// ClassForm.tsx
+import { useState , useEffect} from "react";
 import Button from "../components/Button";
 import Form from "../components/Form";
-import axios from "axios"
-import React from "react";
-import Loading from '../components/Loading';
-import { useApiAlert } from "../hooks/useApiAlert";
-import { useAuth } from "../hooks/useAuth";
+import axios from "axios";
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSave, FaTrash } from "react-icons/fa";
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import Title from '../components/Title';
+import MainContainer from "../components/MainContainer";
+import { useAuth } from "../hooks/useAuth";
+import { useApiAlert } from "../hooks/useApiAlert";
+import TimeInput from "../components/TimeInput"
+import dayjs, { Dayjs } from "dayjs";
+import 'dayjs/locale/pt-br'; // Importar locale português
+import ComboBox from "../components/ComboBox";
+import type { ComboBoxOption } from "../components/ComboBox";
+import NumberInput from "../components/NumberInput";
 import ConfirmationModal from '../components/ConfirmationModal';
 import DeletionModal from '../components/DeletionModal';
+import { FaSave, FaTrash } from "react-icons/fa";
+import Loading from '../components/Loading';
+import Footer from '../components/Footer'
+import Header from "../components/Header";
+import Title from "../components/Title";
+
+// Configurar dayjs para usar português brasileiro globalmente
+dayjs.locale('pt-br');
 
 const ClassForm = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedModalidade, setSelectedModalidade] = useState("");
-  const [selectedProfessor, setSelectedProfessor] = useState("");
-  const [selectedLocal, setSelectedLocal] = useState("");
-  const [selectedDia, setSelectedDia] = useState("");
-  const [horarioInicio, setHorarioInicio] = useState("");
-  const [horarioFim, setHorarioFim] = useState("");
+  const [startTime, setStartTime] = useState<Dayjs | null>(null);
+  const [endTime, setEndTime] = useState<Dayjs | null>(null);
+  const hasError = startTime && endTime && !startTime.isBefore(endTime);
+  
+  const [selectedDia, setSelectedDia] = useState<ComboBoxOption | null>(null);
+  const [selectedProfessor, setSelectedProfessor] = useState<ComboBoxOption | null>(null);
   const [limite, setLimite] = useState("");
-  const [horarioError, setHorarioError] = useState("");
 
-  const [limiteError, setLimiteError] = useState("");
-  const [shouldValidateLimite, setShouldValidateLimite] = useState(false);
-
-  const [modalidadeOptions, setModalidadeOptions] = useState<{ value: string, label: string }[]>([]);
-  const [localOptions, setLocalOptions] = useState<{ value: string, label: string }[]>([]);
+  const [modalidadeOptions, setModalidadeOptions] = useState<{ value: number, label: string }[]>([]);
+  const [localOptions, setLocalOptions] = useState<{ value: number; label: string }[]>([]);
+  const [selectedLocal, setSelectedLocal] = useState<{ value: number; label: string } | null>(null);
+  const [selectedModalidade, setSelectedModalidade] = useState<{ value: number; label: string } | null>(null);
+  const [modalData, setModalData] = useState<any>(null);
 
   const [modalidadesCarregadas, setModalidadesCarregadas] = useState(false);
   const [locaisCarregados, setLocaisCarregados] = useState(false);
+  const [dadosTurmaCarregados, setDadosTurmaCarregados] = useState(false);
 
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
-  const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false); // New state for DeletionModal
+  const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false); 
 
-  const { id } = useParams();
-  const navigate = useNavigate();
+  const isNadoLivre = selectedModalidade?.value === 6;
+
   const { user } = useAuth();
+  const { id } = useParams();
 
   const { showAlert } = useApiAlert();
 
+  const navigate = useNavigate();
+
+  // Carregamento das modalidades - REMOVIDO DUPLICAÇÃO
+  useEffect(() => {
+    const loadModalidades = async () => {
+      try {
+        const response = await axios.get('/cad/mod');
+        const formatted = response.data.map((mod: { modalidade_id: number; nome: string }) => ({
+          value: mod.modalidade_id,
+          label: mod.nome
+        }));
+        setModalidadeOptions(formatted);
+        setModalidadesCarregadas(true);
+      } catch (error) {
+        console.error('Erro ao carregar modalidades:', error);
+        setError("Erro ao carregar modalidades");
+      }
+    };
+
+    loadModalidades();
+  }, []);
+
+  // Carregamento dos locais
+  useEffect(() => {
+    const loadLocais = async () => {
+      try {
+        const response = await axios.get('/cad/local');
+        const formatted = response.data.map((loc: { local_id: number; nome: string }) => ({
+          value: loc.local_id,
+          label: loc.nome
+        }));
+        setLocalOptions(formatted);
+        setLocaisCarregados(true);
+      } catch (error) {
+        console.error('Erro ao carregar locais:', error);
+        setError("Erro ao carregar locais");
+      }
+    };
+
+    loadLocais();
+  }, []);
+
   const fetchTurmaData = async () => {
+    if (!modalidadesCarregadas || !locaisCarregados) {
+      return; // Aguarda carregar as opções primeiro
+    }
+
     setLoading(true);
     setError(null);
+    setDadosTurmaCarregados(false); // Reset do estado
+    
     const timeout = setTimeout(() => {
       setError("Erro ao conectar com o servidor");
       setLoading(false);
     }, 10000);
-
+  
     try {
       const response = await axios.get(`turmas/${id}`, {
         headers: {
@@ -62,95 +118,94 @@ const ClassForm = () => {
         }
       });
       clearTimeout(timeout);
-
+  
       const turmaData = Array.isArray(response.data) ? response.data[0] : response.data;
-
-      setHorarioInicio(turmaData.horario_inicio);
-      setHorarioFim(turmaData.horario_fim);
+  
+      // Definir horários - CORRIGIDO PARA USAR FORMATO CORRETO
+      console.log('Dados recebidos da API:', turmaData);
+      console.log('Horário início bruto:', turmaData.horario_inicio);
+      console.log('Horário fim bruto:', turmaData.horario_fim);
+      
+      if (turmaData.horario_inicio) {
+        // Usar apenas dayjs() com string no formato HH:mm atual
+        const inicioTime = dayjs(`2023-01-01 ${turmaData.horario_inicio}`);
+        console.log('Horário início processado:', inicioTime);
+        console.log('Horário início é válido?', inicioTime.isValid());
+        setStartTime(inicioTime);
+      }
+      if (turmaData.horario_fim) {
+        const fimTime = dayjs(`2023-01-01 ${turmaData.horario_fim}`);
+        console.log('Horário fim processado:', fimTime);
+        console.log('Horário fim é válido?', fimTime.isValid());
+        setEndTime(fimTime);
+      }
+  
       setLimite(turmaData.limite_inscritos.toString());
-      setSelectedDia(turmaData.dia_semana);
-
-      const modalidade = modalidadeOptions.find(mod => mod.label === turmaData.modalidade || mod.label === turmaData.sigla);
-      if (modalidade) setSelectedModalidade(modalidade.value);
-
-      const local = localOptions.find(loc => loc.label === turmaData.local);
-      if (local) setSelectedLocal(local.value);
+  
+      // Buscar dia da semana
+      const diaEncontrado = Dias.find(d => `option${d.value}` === turmaData.dia_semana);
+      if (diaEncontrado) {
+        setSelectedDia(diaEncontrado);
+      }
+  
+      // Buscar modalidade - USANDO VALUE NUMÉRICO
+      const modalidadeEncontrada = modalidadeOptions.find(m => 
+        m.label.toLowerCase() === turmaData.modalidade.toLowerCase()
+      );
+      if (modalidadeEncontrada) {
+        setSelectedModalidade(modalidadeEncontrada);
+      }
+  
+      // Buscar local - USANDO VALUE NUMÉRICO
+      const localEncontrado = localOptions.find(l => 
+        l.label.toLowerCase() === turmaData.local.toLowerCase()
+      );
+      if (localEncontrado) {
+        setSelectedLocal(localEncontrado);
+      }
+  
+      setDadosTurmaCarregados(true); // Marca que os dados foram carregados
       setLoading(false);
-
+  
     } catch (error) {
       clearTimeout(timeout);
       console.error('Erro ao carregar turma:', error);
       setError("Erro ao carregar a turma. Verifique sua conexão ou tente novamente.");
       setLoading(false);
+      setDadosTurmaCarregados(false);
     }
   };
-
+  
+  // Carregamento dos dados da turma - DEPENDÊNCIAS CORRETAS
   useEffect(() => {
-    if (modalidadesCarregadas && locaisCarregados) {
+    if (modalidadesCarregadas && locaisCarregados && id && user?.token) {
       fetchTurmaData();
     }
   }, [modalidadesCarregadas, locaisCarregados, id, user?.token]);
-
-  useEffect(() => {
-    axios.get('/cad/mod').then(response => {
-      const formatted = response.data.map((mod: { modalidade_id: number; nome: string }) => ({
-        value: mod.modalidade_id.toString(),
-        label: mod.nome
-      }));
-      setModalidadeOptions(formatted);
-      setModalidadesCarregadas(true);
-    });
-  }, []);
-
+  
   const Professores = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
+    { value: 1, label: "Fulano da Silva" },
+    { value: 2, label: "Luiz Felipe III" },
+    { value: 3, label: "Ciclano" },
+    { value: 4, label: "Betrano" },
   ];
-
-  const isNadoLivre = () => {
-    const modalidadeSelecionada = modalidadeOptions.find(mod => mod.value === selectedModalidade);
-    return modalidadeSelecionada?.label.toLowerCase().includes('nado livre') || false;
-  };
-
-  const isProfessorRequired = () => {
-    return selectedModalidade && !isNadoLivre();
-  };
-
-  const isFormValid = () => {
-    const professorValid = isProfessorRequired() ? selectedProfessor : true;
-
-    return (
-      selectedModalidade &&
-      professorValid &&
-      selectedLocal &&
-      selectedDia &&
-      horarioInicio &&
-      horarioFim &&
-      !horarioError &&
-      limite &&
-      !validateLimite(limite)
-    );
-  };
-
-  useEffect(() => {
-    axios.get('/cad/local').then(response => {
-      const formatted = response.data.map((loc: { local_id: number; nome: string }) => ({
-        value: loc.local_id.toString(),
-        label: loc.nome
-      }));
-      setLocalOptions(formatted);
-      setLocaisCarregados(true);
-    });
-  }, []);
 
   const Dias = [
-    { value: "option1", label: "Opção 1" },
-    { value: "option2", label: "Opção 2" },
-    { value: "option3", label: "Opção 3" },
-    { value: "option4", label: "Opção 4" },
+    { value: 1, label: "Domingo" },
+    { value: 2, label: "Segunda" },
+    { value: 3, label: "Terça" },
+    { value: 4, label: "Quarta" },
+    { value: 5, label: "Quinta" },
+    { value: 6, label: "Sexta" },
+    { value: 7, label: "Sábado" },
   ];
+
+  const handleModalidadeChange = (modalidade: { value: number; label: string } | null) => {
+    setSelectedModalidade(modalidade);
+    if (modalidade?.value === 6) {
+      setSelectedProfessor(null);
+    }
+  };  
 
   const validateLimite = (value: string): string => {
     if (!value) {
@@ -158,10 +213,7 @@ const ClassForm = () => {
     }
 
     const num = parseInt(value);
-    if (isNaN(num)) {
-      return "Apenas números são permitidos";
-    }
-
+ 
     if (num < 5 || num > 30) {
       return "A quantidade de alunos deve estar entre 5 e 30";
     }
@@ -169,60 +221,32 @@ const ClassForm = () => {
     return "";
   };
 
-  useEffect(() => {
-    if (isNadoLivre()) {
-      setSelectedProfessor("");
-    }
-  }, [selectedModalidade, modalidadeOptions]);
-
-  useEffect(() => {
-
-    if (!horarioInicio || !horarioFim) {
-      setHorarioError("Campo obrigatório");
-      return;
-    }
-
-    const [horaInicio, minInicio] = horarioInicio.split(":").map(Number);
-    const [horaFim, minFim] = horarioFim.split(":").map(Number);
-
-    const inicioEmMinutos = horaInicio * 60 + minInicio;
-    const fimEmMinutos = horaFim * 60 + minFim;
-
-    if (fimEmMinutos <= inicioEmMinutos) {
-      setHorarioError("O horário de fim deve ser maior que o horário de início");
-    } else {
-      setHorarioError("");
-    }
-  }, [horarioInicio, horarioFim]);
-
-  useEffect(() => {
-    if (shouldValidateLimite) {
-      const error = validateLimite(limite);
-      setLimiteError(error);
-    } else {
-      setLimiteError("");
-    }
-  }, [limite, shouldValidateLimite]);
+  const isFormValid = () => {
+    return (
+      limite &&
+      !validateLimite(limite) &&
+      startTime  &&
+      endTime &&
+      selectedDia &&
+      selectedModalidade &&
+      selectedLocal &&
+      (isNadoLivre || selectedProfessor) &&
+      !hasError
+    );
+  };
 
   const handleSave = async () => {
-    setShouldValidateLimite(true);
+    const data = {
+      horario_inicio: startTime?.format("HH:mm"),
+      horario_fim: endTime?.format("HH:mm"),
+      limite_inscritos: parseInt(limite, 10),
+      dia_semana: selectedDia?.label,
+      sigla: selectedModalidade?.label,
+      local: selectedLocal?.label,
+      professor: selectedProfessor?.label ?? "N/A",
+    };
 
-    if (!horarioInicio || !horarioFim) {
-      setHorarioError("Campo obrigatório");
-      return;
-    }
-
-    if (horarioError) {
-      alert(horarioError);
-      return;
-    }
-
-    const limiteValidationError = validateLimite(limite);
-    if (limiteValidationError) {
-      alert(limiteValidationError);
-      return;
-    }
-
+    setModalData(data);
     setIsConfirmationModalOpen(true);
   };
 
@@ -230,13 +254,13 @@ const ClassForm = () => {
     setIsConfirmationModalOpen(false);
     try {
       const json = {
-        horario_inicio: horarioInicio,
-        horario_fim: horarioFim,
+        horario_inicio: startTime?.format("HH:mm"),
+        horario_fim: endTime?.format("HH:mm"),
         limite_inscritos: parseInt(limite, 10),
-        dia_semana: selectedDia,
-        sigla: selectedModalidade,
-        local_id: parseInt(selectedLocal, 10),
-        modalidade_id: parseInt(selectedModalidade, 10),
+        dia_semana: selectedDia?.label,
+        sigla: selectedModalidade?.label,
+        local_id: selectedLocal?.value,
+        modalidade_id: selectedModalidade?.value
       };
 
       console.log("Tentando enviar json:", json);
@@ -259,12 +283,22 @@ const ClassForm = () => {
   };
 
   const handleDelete = () => {
-    // Open the deletion modal instead of directly calling confirm/API
+    const data = {
+      horario_inicio: startTime?.format("HH:mm"),
+      horario_fim: endTime?.format("HH:mm"),
+      limite_inscritos: parseInt(limite, 10),
+      dia_semana: selectedDia?.label,
+      sigla: selectedModalidade?.label,
+      local: selectedLocal?.label,
+      professor: selectedProfessor?.label ?? "N/A",
+    };
+
+    setModalData(data);
     setIsDeletionModalOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    setIsDeletionModalOpen(false); // Close the modal
+    setIsDeletionModalOpen(false); 
     try {
       await axios.delete(`/turmas/${id}`, {
         headers: {
@@ -283,25 +317,6 @@ const ClassForm = () => {
       alert("Erro ao remover a turma.");
     }
   };
-
-  const handleLimiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "");
-    if (value.length <= 2) {
-      setLimite(value);
-
-      if (value.length === 2) {
-        setShouldValidateLimite(true);
-      } else {
-        setShouldValidateLimite(false);
-        setLimiteError("");
-      }
-    }
-  };
-
-  const handleLimiteBlur = () => {
-    setShouldValidateLimite(true);
-  };
-
 
   if (loading) {
     return (
@@ -336,66 +351,60 @@ const ClassForm = () => {
     );
   }
 
-  const selectedModalidadeLabel = modalidadeOptions.find(opt => opt.value === selectedModalidade)?.label || '';
-  const selectedProfessorLabel = Professores.find(opt => opt.value === selectedProfessor)?.label || '';
-  const selectedLocalLabel = localOptions.find(opt => opt.value === selectedLocal)?.label || '';
-  const selectedDiaLabel = Dias.find(opt => opt.value === selectedDia)?.label || '';
-
-  const modalData = {
-    modalidade: selectedModalidadeLabel,
-    professor: isProfessorRequired() ? selectedProfessorLabel : undefined,
-    local: selectedLocalLabel,
-    dia: selectedDiaLabel,
-    horarioInicio: horarioInicio,
-    horarioFim: horarioFim,
-    limite: limite,
-  };
-
   return (
     <MainContainer>
-      <Form title="EDIÇÃO DE TURMA" className="w-screen">
-        <Select value={selectedModalidade} onChange={setSelectedModalidade} label="Modalidade" options={modalidadeOptions} loading={!modalidadesCarregadas}/>
-
-        {selectedModalidade && !isNadoLivre() && (
-          <Select value={selectedProfessor} onChange={setSelectedProfessor} label="Professor" options={Professores} />
-        )}
-
-        <Select value={selectedLocal} onChange={setSelectedLocal} label="Local" options={localOptions} loading={!locaisCarregados}/>
-
+      <Form title="CADASTRO DE TURMA" className="w-screen">
         <div className="flex flex-col w-full">
-          <p className="font-semibold text-2xl mb-2">Horário</p>
           <div className="flex flex-col w-full">
-            <div className="flex flex-row flex-wrap justify-center gap-2 md:gap-32">
-              <div className="flex flex-col w-full md:max-w-2xs">
-                <label className="font-semibold text-lg mb-1">Início</label>
-              </div>
-            </div>
-            {horarioError && (
-              <div className="text-red-500 text-sm mt-1 w-full text-center">
-                {horarioError}
-              </div>
+            <ComboBox
+              label="Modalidade"
+              options={modalidadeOptions}
+              value={selectedModalidade}
+              onChange={handleModalidadeChange}
+            />
+            {!isNadoLivre && (
+              <ComboBox
+                label="Professor"
+                options={Professores}
+                value={selectedProfessor}
+                onChange={setSelectedProfessor}
+              />
             )}
+            <ComboBox
+              label="Local"
+              options={localOptions}
+              value={selectedLocal}
+              onChange={setSelectedLocal}
+            />
+            <div className="flex flex-row w-full justify-between">
+              <TimeInput
+                format="HH:mm"
+                label="Horário Início"
+                value={startTime}
+                onChange={setStartTime}
+              />
+              <TimeInput
+                format="HH:mm"
+                label="Horário Fim"
+                value={endTime}
+                onChange={setEndTime}
+                error={hasError? hasError : undefined}
+                helperText={hasError ? "O horário de fim deve ser maior que o de início" : ""}
+              />
+            </div>
+            <ComboBox
+              label="Dias de Aula"
+              options={Dias}
+              value={selectedDia}
+              onChange={setSelectedDia}
+            />
+            <NumberInput
+            label="Limite de Alunos"
+            value={limite}
+            helperText={<span className="text-red-500">{validateLimite(limite)}</span>}
+            onValueChange={(values) => {setLimite(values.value); console.log(limite)}}/>
           </div>
         </div>
-
-        <Select value={selectedDia} onChange={setSelectedDia} label="Dias de Aula" options={Dias} />
-
-        <div className="flex flex-col w-full">
-          <Input
-            value={limite}
-            onChange={handleLimiteChange}
-            onBlur={handleLimiteBlur}
-            onValidationChange={(isValid) => console.log(isValid)}
-            label="Limite de Alunos"
-            placeholder="Quantidade"
-          />
-          {limiteError && (
-            <div className="text-red-500 text-sm mt-1">
-              {limiteError}
-            </div>
-          )}
-        </div>
-
         <div className="flex flex-col sm:flex-row gap-4 w-full">
           <Button
             text="Salvar"
@@ -407,7 +416,7 @@ const ClassForm = () => {
           />
           <Button
             text="Remover"
-            onClick={handleDelete} // This will now open the DeletionModal
+            onClick={handleDelete}
             icon={FaTrash}
             color="#dc2626"
             className="hover:brightness-80"
@@ -415,14 +424,14 @@ const ClassForm = () => {
         </div>
       </Form>
 
-      <ConfirmationModal
+    <ConfirmationModal
         isOpen={isConfirmationModalOpen}
         onClose={() => setIsConfirmationModalOpen(false)}
         onConfirm={handleConfirmSave}
         data={modalData}
       />
 
-      <DeletionModal // Render the DeletionModal
+      <DeletionModal
         isOpen={isDeletionModalOpen}
         onClose={() => setIsDeletionModalOpen(false)}
         onConfirm={handleConfirmDelete}

@@ -12,6 +12,7 @@ import { Dayjs } from "dayjs";
 import ComboBox from "../components/ComboBox";
 import type { ComboBoxOption } from "../components/ComboBox";
 import NumberInput from "../components/NumberInput";
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const ClassForm = () => {
   useEffect(() => {
@@ -54,6 +55,9 @@ const ClassForm = () => {
   const [localOptions, setLocalOptions] = useState<{ value: number; label: string }[]>([]);
   const [selectedLocal, setSelectedLocal] = useState<{ value: number; label: string } | null>(null);
   const [selectedModalidade, setSelectedModalidade] = useState<{ value: number; label: string } | null>(null);
+  const [modalData, setModalData] = useState<any>(null);
+
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
   const isNadoLivre = selectedModalidade?.value === 6;
 
@@ -115,6 +119,21 @@ const ClassForm = () => {
       (isNadoLivre || selectedProfessor) &&
       !hasError
     );
+  };
+
+  const handleConfirmation = async () => {
+    const data = {
+      horario_inicio: startTime?.format("HH:mm"),
+      horario_fim: endTime?.format("HH:mm"),
+      limite_inscritos: parseInt(limite, 10),
+      dia_semana: selectedDia?.label,
+      sigla: selectedModalidade?.label,
+      local: selectedLocal?.label,
+      professor: selectedProfessor?.label ?? "N/A",
+    };
+
+    setModalData(data);
+    setIsConfirmationModalOpen(true);
   };
 
   const handleConfirmSubmit = async () => {
@@ -202,8 +221,15 @@ const ClassForm = () => {
             onValueChange={(values) => {setLimite(values.value); console.log(limite)}}/>
           </div>
         </div>
-        <Button text="Cadastrar" onClick={handleConfirmSubmit} disabled={!isFormValid()} />
+        <Button text="Cadastrar" onClick={handleConfirmation} disabled={!isFormValid()} />
       </Form>
+
+      <ConfirmationModal
+        isOpen={isConfirmationModalOpen}
+        onClose={() => setIsConfirmationModalOpen(false)}
+        onConfirm={handleConfirmSubmit}
+        data={modalData}
+      />
     </MainContainer>
   );
 };

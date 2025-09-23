@@ -8,7 +8,7 @@ interface ConfirmationModalProps {
   onConfirm: () => void;
   data: {
     modalidade: string;
-    professor?: string; // Optional if Nado Livre
+    professor?: string; 
     local: string;
     dia: string;
     horarioInicio: string;
