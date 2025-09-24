@@ -34,10 +34,10 @@ export default function ComboBox({
       getOptionLabel={(option) => option.label}
       isOptionEqualToValue={(option, val) => option.value === val.value}
       renderInput={(params) => (
-        <TextField {...params} label={label} placeholder={placeholder} />
+        <TextField {...params} label={label} placeholder={placeholder} required />
       )}
       disabled={disabled}
-      sx={{ width: '100%', mt: 1, ...sx }}
+      sx={{ width: '100%', mt: 0, mb: 2, ...sx }}
     />
   );
 }
