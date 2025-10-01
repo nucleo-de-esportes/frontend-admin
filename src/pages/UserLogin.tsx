@@ -6,8 +6,8 @@ import { useApiAlert } from "../hooks/useApiAlert";
 import { useAuth } from "../hooks/useAuth";
 import Button from "../components/Button";
 import Form from "../components/Form";
-import Input from "../components/Input";
 import MainContainer from "../components/MainContainer";
+import TextInput from "../components/TextInput"
 
 const emailValidationSchema = z.string().email("Formato de E-mail inválido");
 const passwordValidationSchema = z.string().min(1, "Senha obrigatória");
@@ -15,8 +15,6 @@ const passwordValidationSchema = z.string().min(1, "Senha obrigatória");
 const UserLogin = () => {
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
-    const [isEmailValid, setIsEmailValid] = useState(false);
-    const [isPasswordValid, setIsPasswordValid] = useState(false);
 
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -31,6 +29,15 @@ const UserLogin = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+
+        // Validar os dados antes de enviar
+        const emailResult = emailValidationSchema.safeParse(formData.email);
+        const passwordResult = passwordValidationSchema.safeParse(formData.password);
+
+        if (!emailResult.success || !passwordResult.success) {
+            setLoading(false);
+            return;
+        }
 
         try {
             const response = await axios.post(`${import.meta.env.VITE_API_URL}/user/login`, {
@@ -67,6 +74,10 @@ const UserLogin = () => {
         }
     };
 
+    // Verificar se os campos são válidos para habilitar/desabilitar o botão
+    const isEmailValid = emailValidationSchema.safeParse(formData.email).success;
+    const isPasswordValid = passwordValidationSchema.safeParse(formData.password).success;
+
     const isDisabled =
         loading ||
         !isEmailValid ||
@@ -77,26 +88,23 @@ const UserLogin = () => {
     return (
         <MainContainer>
             <Form title="Núcleo de Esportes" onSubmit={handleSubmit}>
-                <Input
-                    label="Email"
-                    placeholder="Seu email"
+
+                <TextInput
+                    label="E-mail"
+                    type="email"
                     name="email"
-                    type="text"
                     value={formData.email}
                     onChange={handleInputChange}
                     validation={emailValidationSchema}
-                    onValidationChange={setIsEmailValid}
                 />
 
-                <Input
-                    type="password"
+                <TextInput
                     label="Senha"
-                    placeholder="Sua senha"
+                    type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
                     validation={passwordValidationSchema}
-                    onValidationChange={setIsPasswordValid}
                 />
 
                 <a href="/forgot-password" className="text-[#BF0087] underline hover:text-[#43054E] transition mb-8">

@@ -36,6 +36,7 @@ export default function TimeInput({
         onChange={onChange}
         slotProps={{
           textField: {
+            required: true,
             fullWidth: true,
             margin: "normal",
             error,
@@ -43,7 +44,7 @@ export default function TimeInput({
             ...textFieldProps,
           },
         }}
-        sx={{ width: '47.5%', ...sx }}
+        sx={{ width: '47.5%', mt: 0, mb: 2, ...sx }}
       />
     </LocalizationProvider>
   );

@@ -7,13 +7,13 @@ interface DeletionModalProps {
   onClose: () => void;
   onConfirm: () => void;
   data: {
-    modalidade: string;
-    professor?: string; // Optional if Nado Livre
+    sigla: string;
+    professor?: string;
     local: string;
-    dia: string;
-    horarioInicio: string;
-    horarioFim: string;
-    limite: string;
+    dia_semana: string;
+    horario_inicio: string;
+    horario_fim: string;
+    limite_inscritos: number;
   };
 }
 
@@ -31,16 +31,17 @@ const DeletionModal: React.FC<DeletionModalProps> = ({ isOpen, onClose, onConfir
           &times;
         </button>
 
-        <h2 className="text-2xl font-bold mb-4 text-center text-[#43054E]">Tem certeza que deseja remover esta turma?</h2> {/* Changed text here */}
+        <h2 className="text-2xl font-bold mb-4 text-center text-[#43054E]">Tem certeza que deseja remover esta turma?</h2> 
         
-        {/* You can still display the class details if you want, similar to ConfirmationModal */}
         <div className="space-y-2 mb-8 mt-8">
-          <p>Asa Norte, {data.dia} {data.horarioInicio} - {data.horarioFim} </p>
-          {data.professor && <p><strong>Professor:</strong> {data.professor}</p>}
-          <p><strong>Mensalidade:</strong> R$77,00</p>
+          <p>Asa Norte, {data.dia_semana} {data.horario_inicio} - {data.horario_fim} </p>
+          {data.professor && data.sigla?.toLowerCase() !== "nado livre" && (
+            <p><strong>Professor:</strong> {data.professor}</p>
+          )}
+          <p><strong>Limite de Alunos:</strong> {data.limite_inscritos}</p>
         </div>
         <div className="flex justify-center">
-          <Button text="Remover" onClick={onConfirm} className="w-auto max-w-xs mx-auto bg-red-600 hover:bg-red-700" /> {/* Changed text and added red color */}
+          <Button text="Remover" onClick={onConfirm} className="w-auto max-w-xs mx-auto bg-red-600 hover:bg-red-700" /> 
         </div>
       </div>
     </div>

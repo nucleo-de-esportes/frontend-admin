@@ -25,13 +25,14 @@ export default function NumberInput({
   return (
     <NumericFormat<TextFieldProps>
       {...props}
+      required
       customInput={TextField}
       label={label}
       error={error}
       helperText={helperText}
       variant={variant}
       onValueChange={onValueChange}
-      sx={{ width: '100%', mt: 1, ...sx }}
+      sx={{ width: '100%', mt: 0, mb:2, ...sx }}
     />
   );
 }
