@@ -7,13 +7,13 @@ interface ConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   data: {
-    modalidade: string;
-    professor?: string; 
+    sigla: string;
+    professor?: string;
     local: string;
-    dia: string;
-    horarioInicio: string;
-    horarioFim: string;
-    limite: string;
+    dia_semana: string;
+    horario_inicio: string;
+    horario_fim: string;
+    limite_inscritos: number;
   };
 }
 
@@ -21,23 +21,23 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
   if (!isOpen) return null;
 
   return (
-    // Alterado bg-black bg-opacity-50 para bg-black/50 (funcionalmente o mesmo, mas mais conciso em Tailwind)
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md relative">
         <button
           onClick={onClose}
-          // Alterado text-gray-500 hover:text-gray-700 para text-purple-600 hover:text-purple-800
           className="absolute top-3 right-3 text-[#BF0087] hover:text-[#43054E] text-2xl font-bold"
           aria-label="Fechar"
         >
           &times;
         </button>
 
-        <h2 className="text-2xl font-bold mb-4 text-center text-[#43054E]">{data.modalidade} - A</h2> {/* This might be dynamic based on your data */}
+        <h2 className="text-2xl font-bold mb-4 text-center text-[#43054E]">{data.sigla} - A</h2> 
         <div className="space-y-2 mb-8 mt-8">
-          <p>Asa Norte, {data.dia} {data.horarioInicio} - {data.horarioFim} </p>
-          {data.professor && <p><strong>Professor:</strong> {data.professor}</p>}
-          <p><strong>Mensalidade:</strong> R$77,00</p>
+          <p>Asa Norte, {data.dia_semana} {data.horario_inicio} - {data.horario_fim} </p>
+          {data.professor && data.sigla?.toLowerCase() !== "nado livre" && (
+            <p><strong>Professor:</strong> {data.professor}</p>
+          )}
+          <p><strong>Limite de Alunos:</strong> {data.limite_inscritos}</p>
         </div>
         <div className="flex justify-center">
           <Button text="Confirmar" onClick={onConfirm} className="w-auto max-w-xs mx-auto" />
