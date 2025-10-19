@@ -13,7 +13,7 @@ function App() {
   return (
     <AuthProvider>
       <AlertProvider>
-        <Router>
+        <Router basename="/admin">
           <Routes>
             <Route path="/" element={<UserLogin />} />
 
