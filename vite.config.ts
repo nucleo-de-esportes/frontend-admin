@@ -11,5 +11,6 @@ export default defineConfig({
   server: {
     host: true,        // <- permite acesso por IP
     port: 5173,        // <- opcional: você pode trocar se quiser
-  }
+  },
+  base: "/admin/"
 })
