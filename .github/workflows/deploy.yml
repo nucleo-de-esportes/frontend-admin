@@ -2,7 +2,7 @@ name: Deploy React to OCI Bucket
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, ci/confing-variaveis-de-build ]
 
 jobs:
   build-and-deploy:
@@ -22,6 +22,8 @@ jobs:
       run: npm ci
       
     - name: Build React app
+      env:
+        VITE_API_URL: ${{ vars.VITE_API_URL }}
       run: npm run build
       
     - name: Push to OCI bucket
