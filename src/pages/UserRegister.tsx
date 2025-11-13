@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useApiAlert } from "../hooks/useApiAlert";
 import Button from "../components/Button";
 import Form from "../components/Form";
@@ -135,9 +135,9 @@ const UserRegister = () => {
                         disabled={isDisabled}
                     />
 
-                    <a href="/" className="text-[#BF0087] underline hover:text-[#43054E] transition">
+                    <Link to="/" className="text-[#BF0087] underline hover:text-[#43054E] transition">
                         Fazer Login
-                    </a>
+                    </Link>
                 </div>
             </Form>
         </MainContainer>

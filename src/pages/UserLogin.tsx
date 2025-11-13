@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useApiAlert } from "../hooks/useApiAlert";
 import { useAuth } from "../hooks/useAuth";
 import Button from "../components/Button";
@@ -107,9 +107,9 @@ const UserLogin = () => {
                     validation={passwordValidationSchema}
                 />
 
-                <a href="/forgot-password" className="text-[#BF0087] underline hover:text-[#43054E] transition mb-8">
+                <Link to="/forgot-password" className="text-[#BF0087] underline hover:text-[#43054E] transition mb-8">
                     Esqueci minha senha
-                </a>
+                </Link>
 
                 <Button
                     text={loading ? "Entrando..." : "Entrar"}
@@ -117,9 +117,9 @@ const UserLogin = () => {
                     disabled={isDisabled}
                 />
 
-                <a href="/user/cadastro" className="text-[#BF0087] underline hover:text-[#43054E] transition">
+                <Link to="/user/cadastro" className="text-[#BF0087] underline hover:text-[#43054E] transition">
                     Criar uma conta
-                </a>
+                </Link>
             </Form>
         </MainContainer>
     );
