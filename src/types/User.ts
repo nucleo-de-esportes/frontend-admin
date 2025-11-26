@@ -1,7 +1,5 @@
 export interface User {
-    user_id: string;
-    email: string;
-    name: string;
-    user_type: "aluno" | "professor" | "admin";
-    token: string;
-  }
+  user_id: string;
+  user_type: "aluno" | "professor" | "admin";
+  token: string;
+}
