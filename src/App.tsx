@@ -8,6 +8,7 @@ import ClassViewAdm from "./pages/ClassViewAdm";
 import ClassEdit from "./pages/ClassEdit";
 import UserRegister from "./pages/UserRegister";
 import UserLogin from "./pages/UserLogin";
+import PublicRoute from "./components/PublicRoute"
 
 function App() {
   return (
@@ -15,7 +16,12 @@ function App() {
       <AlertProvider>
         <Router basename="/admin">
           <Routes>
-            <Route path="/" element={<UserLogin />} />
+            <Route path="/" element={
+              <PublicRoute>
+                <UserLogin />
+              </PublicRoute>
+              } 
+            />
 
             <Route
               path="/cadastro/turma"
@@ -50,7 +56,11 @@ function App() {
               }
             />
 
-            <Route path="/user/cadastro" element={<UserRegister />} />
+            <Route path="/user/cadastro" element={
+              <PublicRoute>
+                <UserRegister/>
+              </PublicRoute>
+                } />
           </Routes>
           <AlertContainer />
         </Router>
