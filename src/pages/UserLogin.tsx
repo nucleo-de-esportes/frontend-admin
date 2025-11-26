@@ -45,7 +45,7 @@ const UserLogin = () => {
                 password: formData.password
             });
 
-            const token = response.data.usuario.token;
+            const token = response.data.token;
             login(token);
 
             showAlert(
