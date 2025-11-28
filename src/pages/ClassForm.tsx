@@ -1,4 +1,3 @@
-// ClassForm.tsx
 import { useState, useEffect } from "react";
 import Button from "../components/Button";
 import Form from "../components/Form";
@@ -17,77 +16,42 @@ import Loading from "../components/Loading";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Title from "../components/Title";
+import TextInput from "../components/TextInput";
 
 const ClassForm = () => {
   const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
   const [endTime, setEndTime] = useState<Dayjs | null>(null);
   const hasError = startTime && endTime && !startTime.isBefore(endTime);
 
-  const [selectedDia, setSelectedDia] = useState<ComboBoxOption | null>(null);
-  const [selectedProfessor, setSelectedProfessor] =
-    useState<ComboBoxOption | null>(null);
   const [limite, setLimite] = useState("");
+  const [sigla, setSigla] = useState("");
 
-  const [modalidadeOptions, setModalidadeOptions] = useState<
-    { value: number; label: string }[]
-  >([]);
-  const [localOptions, setLocalOptions] = useState<
-    { value: number; label: string }[]
-  >([]);
-  const [selectedLocal, setSelectedLocal] = useState<{
-    value: number;
-    label: string;
-  } | null>(null);
-  const [selectedModalidade, setSelectedModalidade] = useState<{
-    value: number;
-    label: string;
-  } | null>(null);
+  const [modalidadeOptions, setModalidadeOptions] =
+    useState<ComboBoxOption[]>([]);
+  const [localOptions, setLocalOptions] = useState<ComboBoxOption[]>([]);
+  const [selectedLocal, setSelectedLocal] = useState<ComboBoxOption | null>(
+    null
+  );
+  const [selectedModalidade, setSelectedModalidade] =
+    useState<ComboBoxOption | null>(null);
+
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] =
+    useState(false);
   const [modalData, setModalData] = useState<any>(null);
-
-  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
-
-  const isNadoLivre = selectedModalidade?.value === 6;
 
   const { user } = useAuth();
   const { showAlert } = useApiAlert();
   const navigate = useNavigate();
 
-  const Professores = [
-    { value: 1, label: "Fulano da Silva" },
-    { value: 2, label: "Luiz Felipe III" },
-    { value: 3, label: "Ciclano" },
-    { value: 4, label: "Betrano" },
-  ];
-
-  const Dias = [
-    { value: 1, label: "Domingo" },
-    { value: 2, label: "Segunda" },
-    { value: 3, label: "Terça" },
-    { value: 4, label: "Quarta" },
-    { value: 5, label: "Quinta" },
-    { value: 6, label: "Sexta" },
-    { value: 7, label: "Sábado" },
-  ];
-
-  const handleModalidadeChange = (
-    modalidade: { value: number; label: string } | null
-  ) => {
-    setSelectedModalidade(modalidade);
-    if (modalidade?.value === 6) {
-      setSelectedProfessor(null);
-    }
-  };
-
   const validateLimite = (value: string): string => {
     const num = parseInt(value);
-
     if (num < 5 || num > 30) {
       return "A quantidade de alunos deve estar entre 5 e 30";
     }
-
     return "";
   };
 
@@ -97,41 +61,71 @@ const ClassForm = () => {
       !validateLimite(limite) &&
       startTime &&
       endTime &&
-      selectedDia &&
       selectedModalidade &&
       selectedLocal &&
-      (isNadoLivre || selectedProfessor) &&
+      sigla &&
       !hasError
     );
   };
 
-  // Função unificada para buscar modalidades e locais
+  const gerarAbreviacao = (nome: string): string => {
+    return nome
+      .split(" ")
+      .map((p) => p[0])
+      .join("")
+      .substring(0, 3)
+      .toUpperCase();
+  };
+
+  const gerarSiglaAutomatica = async (modalidadeId: number, nome: string) => {
+    try {
+      const res = await axios.get("/turmas", {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+
+      const existente = res.data.filter(
+        (t: any) => t.modalidade.modalidade_id === modalidadeId
+      ).length;
+
+      const prefixo = gerarAbreviacao(nome);
+      const numero = String(existente + 1).padStart(3, "0");
+
+      setSigla(`${prefixo}-${numero}`);
+    } catch (err) {
+      console.log("Erro ao gerar sigla:", err);
+      setSigla("SIG-001");
+    }
+  };
+
+  const handleModalidadeChange = (mod: ComboBoxOption | null) => {
+    setSelectedModalidade(mod);
+    if (mod) gerarSiglaAutomatica(mod.value, mod.label);
+  };
+
   const fetchOptionData = async () => {
     try {
       setLoading(true);
-      setError(null);
 
-      const [modalidadeRes, localRes] = await Promise.all([
-        axios.get<{ modalidade_id: number; nome: string; valor: number }[]>(
-          "/cad/mod"
-        ),
-        axios.get<{ local_id: number; nome: string }[]>("/cad/local"),
+      const [modalRes, localRes] = await Promise.all([
+        axios.get("/cad/mod"),
+        axios.get("/cad/local"),
       ]);
 
-      const modalidades = modalidadeRes.data.map((res) => ({
-        value: res.modalidade_id,
-        label: res.nome,
-      }));
-      setModalidadeOptions(modalidades);
+      setModalidadeOptions(
+        modalRes.data.map((m: any) => ({
+          value: m.modalidade_id,
+          label: m.nome,
+        }))
+      );
 
-      const locais = localRes.data.map((res) => ({
-        value: res.local_id,
-        label: res.nome,
-      }));
-      setLocalOptions(locais);
-    } catch (err) {
-      console.error("Erro ao carregar opções:", err);
-      setError("Não foi possível carregar os dados. Tente novamente.");
+      setLocalOptions(
+        localRes.data.map((l: any) => ({
+          value: l.local_id,
+          label: l.nome,
+        }))
+      );
+    } catch (e) {
+      setError("Não foi possível carregar os dados.");
     } finally {
       setLoading(false);
     }
@@ -141,15 +135,14 @@ const ClassForm = () => {
     fetchOptionData();
   }, []);
 
-  const handleConfirmation = async () => {
+  const handleConfirmation = () => {
     const data = {
       horario_inicio: startTime?.format("HH:mm"),
       horario_fim: endTime?.format("HH:mm"),
-      limite_inscritos: parseInt(limite, 10),
-      dia_semana: selectedDia?.label,
-      sigla: selectedModalidade?.label,
+      limite: limite,
+      sigla: sigla,
+      modalidade: selectedModalidade?.label,
       local: selectedLocal?.label,
-      professor: selectedProfessor?.label ?? "N/A",
     };
 
     setModalData(data);
@@ -158,32 +151,35 @@ const ClassForm = () => {
 
   const handleConfirmSubmit = async () => {
     try {
+      setSubmitting(true);
+
       const json = {
         horario_inicio: startTime?.format("HH:mm"),
         horario_fim: endTime?.format("HH:mm"),
         limite_inscritos: parseInt(limite, 10),
-        dia_semana: selectedDia?.label,
-        sigla: selectedModalidade?.label,
+        sigla: sigla,
         local_id: selectedLocal?.value,
         modalidade_id: selectedModalidade?.value,
       };
 
-      console.log("Tentando enviar json:", json);
       await axios.post("/turmas", json, {
-        headers: {
-          Authorization: `Bearer ${user?.token}`,
-        },
+        headers: { Authorization: `Bearer ${user?.token}` },
       });
+
       showAlert(
         "success",
         "Cadastro realizado com sucesso!",
         "Cadastro Realizado",
         2000
       );
+
       navigate("/turmas");
-    } catch (error) {
-      console.error("Erro ao cadastrar:", error);
-      alert("Erro ao cadastrar a turma.");
+    } catch (err: any) {
+      let msg = "Erro ao cadastrar.";
+      if (err.response?.data?.error) msg = err.response.data.error;
+      showAlert("error", msg, "Erro", 4000);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -234,15 +230,6 @@ const ClassForm = () => {
             onChange={handleModalidadeChange}
           />
 
-          {!isNadoLivre && (
-            <ComboBox
-              label="Professor"
-              options={Professores}
-              value={selectedProfessor}
-              onChange={setSelectedProfessor}
-            />
-          )}
-
           <ComboBox
             label="Local"
             options={localOptions}
@@ -262,7 +249,7 @@ const ClassForm = () => {
               label="Horário Fim"
               value={endTime}
               onChange={setEndTime}
-              error={hasError ? hasError : undefined}
+              error={hasError || undefined}
               helperText={
                 hasError
                   ? "O horário de fim deve ser maior que o de início"
@@ -271,28 +258,21 @@ const ClassForm = () => {
             />
           </div>
 
-          <ComboBox
-            label="Dias de Aula"
-            options={Dias}
-            value={selectedDia}
-            onChange={setSelectedDia}
-          />
-
           <NumberInput
             label="Limite de Alunos"
             value={limite}
             helperText={
               <span className="text-red-500">{validateLimite(limite)}</span>
             }
-            onValueChange={(values) => setLimite(values.value)}
+            onValueChange={(v) => setLimite(v.value)}
           />
         </div>
 
         <div className="w-full">
           <Button
-            text="Cadastrar"
+            text={submitting ? "Cadastrando..." : "Cadastrar"}
             onClick={handleConfirmation}
-            disabled={!isFormValid()}
+            disabled={!isFormValid() || submitting}
           />
         </div>
 

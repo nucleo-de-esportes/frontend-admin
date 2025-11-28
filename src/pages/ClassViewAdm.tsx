@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Plus, Filter, FileDown } from 'lucide-react';
 import Header from '../components/Header';
@@ -9,232 +9,123 @@ import Title from '../components/Title';
 import FiltroDeTurmas from '../components/FiltroDeTurmas';
 import Loading from '../components/Loading';
 import { jsPDF } from 'jspdf';
-import { Turma } from '../types/Class';
-
 import { useIsSmallScreen } from '../hooks/useIsSmallScreen';
 import { useNavigate } from 'react-router-dom';
 import MainContainer from '../components/MainContainer';
+import { useAuth } from '../hooks/useAuth';
 
 export default function ClassView() {
     const isSmall = useIsSmallScreen();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
-    const [turmas, setTurmas] = useState<Turma[]>([]);
-    const [turmasFiltradas, setTurmasFiltradas] = useState<Turma[]>([]);
+    const [turmas, setTurmas] = useState<any[]>([]);
+    const [turmasFiltradas, setTurmasFiltradas] = useState<any[]>([]);
     const [filtroAberto, setFiltroAberto] = useState(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // useEffect para buscar os dados quando o componente montar
-    useEffect(() => {
-        const fetchTurmas = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const apiUrl = import.meta.env.VITE_API_URL;
-                if (!apiUrl) {
-                    throw new Error("Variável de ambiente VITE_API_URL não está definida.");
-                }
-                const response = await axios.get<Turma[]>(`${apiUrl}/turmas`);
-                setTurmas(response.data || []);
-                setTurmasFiltradas(response.data || []);
-            } catch (err) {
-                console.error("Erro ao buscar turmas:", err);
-                if (axios.isAxiosError(err)) {
-                    setError(`Erro ao conectar com o servidor: ${err.message}`);
-                } else {
-                    setError("Ocorreu um erro desconhecido ao buscar os dados.");
-                }
-                setTurmas([]);
-                setTurmasFiltradas([]);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchTurmas = useCallback(async () => {
+        if (!user?.token) return;
 
-        fetchTurmas();
-    }, []);
-
-    const fetchTurmasAgain = async () => {
+        setLoading(true);
+        setError(null);
         try {
             const apiUrl = import.meta.env.VITE_API_URL;
-            if (!apiUrl) {
-                throw new Error("A variável de ambiente VITE_API_URL não está definida.");
-            }
-            const response = await axios.get<Turma[]>(`${apiUrl}/turmas`);
-            setTurmas(response.data || []);
-            setTurmasFiltradas(response.data || []);
-        } catch (err) {
-            console.error("Erro ao buscar turmas:", err);
-            if (axios.isAxiosError(err)) {
-                setError(`Erro ao conectar com o servidor: ${err.message}`);
-            } else {
-                setError("Ocorreu um erro desconhecido ao buscar os dados.");
-            }
+            if (!apiUrl) throw new Error("VITE_API_URL não definida");
+
+            const response = await axios.get(`${apiUrl}/turmas`, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+
+            const dadosTratados = response.data.map((turma: any, index: number) => {
+                
+                const modalidadeString = typeof turma.modalidade === 'object' && turma.modalidade !== null
+                    ? turma.modalidade.nome
+                    : String(turma.modalidade || '');
+
+                const localString = typeof turma.local === 'object' && turma.local !== null
+                    ? turma.local.nome
+                    : String(turma.local || '');
+
+                const uniqueId = turma.turma_id ? turma.turma_id : `temp-${index}-${Date.now()}`;
+
+                return {
+                    ...turma,
+                    turma_id: uniqueId, 
+                    modalidade: modalidadeString, 
+                    local: localString,
+                    original_local: turma.local
+                };
+            });
+
+            setTurmas(dadosTratados);
+            setTurmasFiltradas(dadosTratados);
+
+        } catch (err: any) {
+            const msg = axios.isAxiosError(err) 
+                ? `Erro ao carregar dados: ${err.response?.status === 401 ? 'Não autorizado' : err.message}` 
+                : "Erro desconhecido ao conectar com o servidor.";
+            setError(msg);
         } finally {
             setLoading(false);
         }
+    }, [user]);
+
+    useEffect(() => {
+        fetchTurmas();
+    }, [fetchTurmas]);
+
+    const handleEditar = (turma: any) => {
+        navigate(`/editar/turma/${turma.turma_id}`);
     };
 
-    const handleEditar = (turma: Turma): void => {
-        navigate(`/editar/turma/${turma.turma_id}`)
-    };
-
-    // Função para dividir texto longo em múltiplas linhas
-    const splitText = (doc: jsPDF, text: string | null | undefined, maxWidth: number): string[] => {
-        if (!text || typeof text !== 'string') {
-            return [''];
-        }
-
-        const words = text.split(' ');
-        const lines: string[] = [];
-        let currentLine = '';
-
-        for (const word of words) {
-            const testLine = currentLine + (currentLine ? ' ' : '') + word;
-            const testWidth = doc.getTextWidth(testLine);
-
-            if (testWidth <= maxWidth) {
-                currentLine = testLine;
-            } else {
-                if (currentLine) {
-                    lines.push(currentLine);
-                    currentLine = word;
-                } else {
-                    lines.push(word);
-                }
-            }
-        }
-
-        if (currentLine) {
-            lines.push(currentLine);
-        }
-
-        return lines;
-    };
-
-    // Função para exportar turmas para PDF
     const exportToPDF = () => {
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.width;
-        const pageHeight = doc.internal.pageSize.height;
-        const margin = 14;
-        const lineHeight = 6;
-        let currentY = 20;
+        try {
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 14;
+            let currentY = 20;
 
-        // Título
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Relatório de Turmas', margin, currentY);
+            doc.setFontSize(16);
+            doc.text('Relatório de Turmas', margin, currentY);
+            currentY += 10;
+            
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, margin, currentY);
+            currentY += 15;
 
-        currentY += 10;
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Data de geração: ${new Date().toLocaleDateString()}`, margin, currentY);
+            turmasFiltradas.forEach((turma) => {
+                const linha = [
+                    String(turma.sigla || ''),
+                    String(turma.dia_semana || ''),
+                    `${turma.horario_inicio || ''} - ${turma.horario_fim || ''}`,
+                    String(turma.local || ''),
+                    String(turma.modalidade || ''),
+                    String(turma.limite_inscritos || '0')
+                ];
+                
+                doc.text(linha.join(" | "), margin, currentY);
+                currentY += 10;
 
-        currentY += 15;
-        const columnWidths = [25, 20, 35, 40, 25, 20];
-        const headers = ["Sigla", "Dia", "Horário", "Local", "Modalidade", "Limite"];
+                if (currentY >= pageHeight - 20) {
+                    doc.addPage();
+                    currentY = 20;
+                }
+            });
 
-        const columnPositions = [margin];
-        for (let i = 0; i < columnWidths.length - 1; i++) {
-            columnPositions.push(columnPositions[i] + columnWidths[i]);
+            doc.save(`turmas.pdf`);
+        } catch (e) {
+            alert("Não foi possível gerar o PDF no momento.");
         }
-
-        // Cabeçalho da tabela
-        doc.setFillColor(66, 66, 66);
-        doc.rect(margin, currentY - 4, pageWidth - 2 * margin, 8, 'F');
-
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-
-        headers.forEach((header, index) => {
-            doc.text(header, columnPositions[index] + 2, currentY);
-        });
-
-        currentY += 6;
-        doc.setTextColor(0, 0, 0);
-        doc.setFont('helvetica', 'normal');
-
-        doc.setDrawColor(200, 200, 200);
-        doc.line(margin, currentY, pageWidth - margin, currentY);
-        currentY += 2;
-
-        // Dados das turmas
-        (turmasFiltradas ?? []).forEach((turma, rowIndex) => {
-            if (currentY > pageHeight - 30) {
-                doc.addPage();
-                currentY = 20;
-            }
-
-            const rowData = [
-                turma.sigla || '',
-                turma.dia_semana || '',
-                `${turma.horario_inicio || ''} - ${turma.horario_fim || ''}`,
-                turma.local || '',
-                turma.modalidade || '',
-                turma.limite_inscritos?.toString() || '0'
-            ];
-
-            let maxLines = 1;
-            const textLines: string[][] = [];
-
-            rowData.forEach((data, colIndex) => {
-                const lines = splitText(doc, data, columnWidths[colIndex] - 4);
-                textLines.push(lines);
-                maxLines = Math.max(maxLines, lines.length);
-            });
-
-            const rowHeight = maxLines * lineHeight;
-
-            if (rowIndex % 2 === 0) {
-                doc.setFillColor(248, 248, 248);
-                doc.rect(margin, currentY - 1, pageWidth - 2 * margin, rowHeight, 'F');
-            }
-
-            textLines.forEach((lines, colIndex) => {
-                lines.forEach((line, lineIndex) => {
-                    doc.text(line, columnPositions[colIndex] + 2, currentY + 4 + (lineIndex * lineHeight));
-                });
-            });
-
-            doc.setDrawColor(220, 220, 220);
-            columnPositions.forEach(pos => {
-                doc.line(pos, currentY - 1, pos, currentY + rowHeight - 1);
-            });
-            doc.line(pageWidth - margin, currentY - 1, pageWidth - margin, currentY + rowHeight - 1);
-
-            doc.line(margin, currentY + rowHeight - 1, pageWidth - margin, currentY + rowHeight - 1);
-
-            currentY += rowHeight;
-        });
-
-        currentY += 10;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text(`Total de turmas: ${(turmasFiltradas ?? []).length}`, margin, currentY);
-
-        const totalPages = doc.getNumberOfPages();
-        for (let i = 1; i <= totalPages; i++) {
-            doc.setPage(i);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
-            doc.text(
-                `Página ${i} de ${totalPages}`,
-                pageWidth - margin - 20,
-                pageHeight - 10
-            );
-        }
-
-        doc.save(`turmas-${new Date()}`);
     };
 
     if (loading) {
         return (
             <div className="bg-[#E4E4E4] min-h-screen flex flex-col justify-between">
                 <Header />
-                <main className="flex-grow bg-gray-100 flex items-center justify-center">
+                <main className="flex-grow flex items-center justify-center">
                     <Loading />
                 </main>
                 <Footer />
@@ -246,20 +137,11 @@ export default function ClassView() {
         return (
             <div className="bg-[#E4E4E4] min-h-screen flex flex-col justify-between">
                 <Header />
-                <main className="flex-grow bg-gray-100 flex items-center justify-center">
-                    <div className="max-w-4xl mx-auto bg-white shadow-sm p-8 text-center">
-                        <Title title='ERRO AO CARREGAR TURMAS' />
-                        <p className="text-red-500 mt-4">{error}</p>
-                        <Button
-                            text="Tentar Novamente"
-                            onClick={() => {
-                                setLoading(true);
-                                setError(null);
-                                fetchTurmasAgain();
-                            }}
-                            size="md"
-                            className="mt-6"
-                        />
+                <main className="flex-grow flex items-center justify-center">
+                    <div className="bg-white p-8 shadow rounded text-center">
+                        <Title title='ERRO' />
+                        <p className="text-red-500 mt-4 mb-4">{error}</p>
+                        <Button text="Tentar Novamente" onClick={fetchTurmas} size="md" />
                     </div>
                 </main>
                 <Footer />
@@ -269,52 +151,50 @@ export default function ClassView() {
 
     return (
         <MainContainer>
-        <div className="flex flex-col min-h-full p-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2 sm:gap-0">
-                <Title title='TURMAS CADASTRADAS' />
-                <div className="flex gap-2 w-full sm:w-auto">
-                    <Button
-                        icon={FileDown}
-                        text={isSmall ? '' : 'PDF'}
-                        size="sm"
-                        onClick={exportToPDF}
-                        disabled={(turmasFiltradas ?? []).length === 0}
-                    />
-                    <Button
-                        icon={Filter}
-                        text='Filtrar'
-                        size="sm"
-                        onClick={() => setFiltroAberto(!filtroAberto)}
-                    />
-                    <Button
-                        icon={Plus}
-                        text={isSmall ? 'Turma' : ''}
-                        size="sm"
-                        onClick={() => navigate('/cadastro/turma')}
-                    />
+            <div className="flex flex-col min-h-full p-8">
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2 sm:gap-0">
+                    <Title title='TURMAS CADASTRADAS' />
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <Button
+                            icon={FileDown}
+                            text={isSmall ? '' : 'PDF'}
+                            size="sm"
+                            onClick={exportToPDF}
+                            disabled={turmasFiltradas.length === 0}
+                        />
+                        <Button
+                            icon={Filter}
+                            text='Filtrar'
+                            size="sm"
+                            onClick={() => setFiltroAberto(!filtroAberto)}
+                        />
+                        <Button
+                            icon={Plus}
+                            text={isSmall ? 'Turma' : ''}
+                            size="sm"
+                            onClick={() => navigate('/cadastro/turma')}
+                        />
+                    </div>
+                </div>
+
+                <FiltroDeTurmas
+                    turmas={turmas}
+                    onChange={setTurmasFiltradas}
+                    hideButton={true}
+                    isOpen={filtroAberto}
+                    onToggleFilter={setFiltroAberto}
+                />
+
+                <div className="space-y-4 mt-4 flex-grow">
+                    {turmasFiltradas.map((turma, index) => (
+                        <ClassCard
+                            key={turma.turma_id || `fallback-key-${index}`}
+                            turma={turma}
+                            onEditar={handleEditar}
+                        />
+                    ))}
                 </div>
             </div>
-    
-            {/* Filtro */}
-            <FiltroDeTurmas
-                turmas={turmas}
-                onChange={(filtradas) => setTurmasFiltradas(filtradas ?? [])}
-                hideButton={true}
-                isOpen={filtroAberto}
-                onToggleFilter={(isOpen) => setFiltroAberto(isOpen)}
-            />
-    
-            {/* Lista de turmas */}
-            <div className="space-y-4 mt-4 flex-grow">
-                {(turmasFiltradas ?? []).map((turma, index) => (
-                    <ClassCard
-                        key={index}
-                        turma={turma}
-                        onEditar={handleEditar}
-                    />
-                ))}
-            </div>
-        </div>
-    </MainContainer>
+        </MainContainer>
     );
 }
