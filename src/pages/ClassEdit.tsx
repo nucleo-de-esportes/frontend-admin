@@ -58,9 +58,6 @@ const ClassEdit = () => {
   const [endTime, setEndTime] = useState<Dayjs | null>(null);
   const hasError = startTime && endTime && !startTime.isBefore(endTime);
 
-  const [selectedDia, setSelectedDia] = useState<ComboBoxOption | null>(null);
-  const [selectedProfessor, setSelectedProfessor] =
-    useState<ComboBoxOption | null>(null);
   const [limite, setLimite] = useState("");
 
   const [modalidadeOptions, setModalidadeOptions] = useState<
@@ -84,8 +81,6 @@ const ClassEdit = () => {
 
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
   const [isDeletionModalOpen, setIsDeletionModalOpen] = useState(false);
-
-  const isNadoLivre = selectedModalidade?.value === 6;
 
   const { user } = useAuth();
   const { id } = useParams();
@@ -119,19 +114,15 @@ const ClassEdit = () => {
 
       setLimite(turmaData.limite_inscritos.toString());
 
-      setSelectedDia(
-        Dias.find((d) => d.label === turmaData.dia_semana) ?? null
-      );
-
       setSelectedModalidade(
         modalidadeOptions.find(
-          (m) => m.label.toLowerCase() === turmaData.modalidade.toLowerCase()
+          (m) => m.label.toLowerCase() === String(turmaData.modalidade || '').toLowerCase()
         ) ?? null
       );
-
+      
       setSelectedLocal(
         localOptions.find(
-          (l) => l.label.toLowerCase() === turmaData.local.toLowerCase()
+          (l) => l.label.toLowerCase() === String(turmaData.local || '').toLowerCase()
         ) ?? null
       );
 
@@ -152,45 +143,6 @@ const ClassEdit = () => {
     }
   }, [modalidadesCarregadas, locaisCarregados, id, user?.token]);
 
-  useEffect(() => {
-    axios.get("/cad/mod").then((response) => {
-      const formatted = response.data.map(
-        (mod: { modalidade_id: number; nome: string }) => ({
-          value: mod.modalidade_id,
-          label: mod.nome,
-        })
-      );
-      setModalidadeOptions(formatted);
-      setModalidadesCarregadas(true);
-    });
-  }, []);
-
-  const Professores = [
-    { value: 1, label: "Fulano da Silva" },
-    { value: 2, label: "Luiz Felipe III" },
-    { value: 3, label: "Ciclano" },
-    { value: 4, label: "Betrano" },
-  ];
-
-  const Dias = [
-    { value: 1, label: "Domingo" },
-    { value: 2, label: "Segunda" },
-    { value: 3, label: "Terça" },
-    { value: 4, label: "Quarta" },
-    { value: 5, label: "Quinta" },
-    { value: 6, label: "Sexta" },
-    { value: 7, label: "Sábado" },
-  ];
-
-  const handleModalidadeChange = (
-    modalidade: { value: number; label: string } | null
-  ) => {
-    setSelectedModalidade(modalidade);
-    if (modalidade?.value === 6) {
-      setSelectedProfessor(null);
-    }
-  };
-
   const validateLimite = (value: string): string => {
     const num = parseInt(value);
 
@@ -207,10 +159,8 @@ const ClassEdit = () => {
       !validateLimite(limite) &&
       startTime &&
       endTime &&
-      selectedDia &&
       selectedModalidade &&
       selectedLocal &&
-      (isNadoLivre || selectedProfessor) &&
       !hasError
     );
   };
@@ -220,10 +170,8 @@ const ClassEdit = () => {
       horario_inicio: startTime?.format("HH:mm"),
       horario_fim: endTime?.format("HH:mm"),
       limite_inscritos: parseInt(limite, 10),
-      dia_semana: selectedDia?.label,
       sigla: selectedModalidade?.label,
       local: selectedLocal?.label,
-      professor: selectedProfessor?.label ?? "N/A",
     };
 
     setModalData(data);
@@ -237,7 +185,6 @@ const ClassEdit = () => {
         horario_inicio: startTime?.format("HH:mm"),
         horario_fim: endTime?.format("HH:mm"),
         limite_inscritos: parseInt(limite, 10),
-        dia_semana: selectedDia?.label,
         sigla: selectedModalidade?.label,
         local_id: selectedLocal?.value,
         modalidade_id: selectedModalidade?.value,
@@ -267,10 +214,8 @@ const ClassEdit = () => {
       horario_inicio: startTime?.format("HH:mm"),
       horario_fim: endTime?.format("HH:mm"),
       limite_inscritos: parseInt(limite, 10),
-      dia_semana: selectedDia?.label,
       sigla: selectedModalidade?.label,
       local: selectedLocal?.label,
-      professor: selectedProfessor?.label ?? "N/A",
     };
 
     setModalData(data);
@@ -342,16 +287,8 @@ const ClassEdit = () => {
             label="Modalidade"
             options={modalidadeOptions}
             value={selectedModalidade}
-            onChange={handleModalidadeChange}
+            onChange={setSelectedModalidade}
           />
-          {!isNadoLivre && (
-            <ComboBox
-              label="Professor"
-              options={Professores}
-              value={selectedProfessor}
-              onChange={setSelectedProfessor}
-            />
-          )}
           <ComboBox
             label="Local"
             options={localOptions}
@@ -378,12 +315,6 @@ const ClassEdit = () => {
               }
             />
           </div>
-          <ComboBox
-            label="Dias de Aula"
-            options={Dias}
-            value={selectedDia}
-            onChange={setSelectedDia}
-          />
           <NumberInput
             label="Limite de Alunos"
             value={limite}
