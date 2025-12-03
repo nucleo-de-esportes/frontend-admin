@@ -16,7 +16,6 @@ import Loading from "../components/Loading";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import Title from "../components/Title";
-import TextInput from "../components/TextInput";
 
 const ClassForm = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -28,7 +27,6 @@ const ClassForm = () => {
   const hasError = startTime && endTime && !startTime.isBefore(endTime);
 
   const [limite, setLimite] = useState("");
-  const [sigla, setSigla] = useState("");
 
   const [modalidadeOptions, setModalidadeOptions] =
     useState<ComboBoxOption[]>([]);
@@ -63,43 +61,12 @@ const ClassForm = () => {
       endTime &&
       selectedModalidade &&
       selectedLocal &&
-      sigla &&
       !hasError
     );
   };
 
-  const gerarAbreviacao = (nome: string): string => {
-    return nome
-      .split(" ")
-      .map((p) => p[0])
-      .join("")
-      .substring(0, 3)
-      .toUpperCase();
-  };
-
-  const gerarSiglaAutomatica = async (modalidadeId: number, nome: string) => {
-    try {
-      const res = await axios.get("/turmas", {
-        headers: { Authorization: `Bearer ${user?.token}` },
-      });
-
-      const existente = res.data.filter(
-        (t: any) => t.modalidade.modalidade_id === modalidadeId
-      ).length;
-
-      const prefixo = gerarAbreviacao(nome);
-      const numero = String(existente + 1).padStart(3, "0");
-
-      setSigla(`${prefixo}-${numero}`);
-    } catch (err) {
-      console.log("Erro ao gerar sigla:", err);
-      setSigla("SIG-001");
-    }
-  };
-
   const handleModalidadeChange = (mod: ComboBoxOption | null) => {
     setSelectedModalidade(mod);
-    if (mod) gerarSiglaAutomatica(mod.value, mod.label);
   };
 
   const fetchOptionData = async () => {
@@ -140,7 +107,7 @@ const ClassForm = () => {
       horario_inicio: startTime?.format("HH:mm"),
       horario_fim: endTime?.format("HH:mm"),
       limite: limite,
-      sigla: sigla,
+      sigla: "Gerada Automaticamente",
       modalidade: selectedModalidade?.label,
       local: selectedLocal?.label,
     };
@@ -157,7 +124,6 @@ const ClassForm = () => {
         horario_inicio: startTime?.format("HH:mm"),
         horario_fim: endTime?.format("HH:mm"),
         limite_inscritos: parseInt(limite, 10),
-        sigla: sigla,
         local_id: selectedLocal?.value,
         modalidade_id: selectedModalidade?.value,
       };
