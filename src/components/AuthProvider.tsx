@@ -11,12 +11,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = (token: string) => {
     localStorage.setItem("auth_token", token);
     const decoded = jwtDecode<AuthTokenPayload>(token);
-    const { sub, email, user_metadata } = decoded;
     setUser({
-      user_id: sub,
-      email,
-      name: user_metadata.nome,
-      user_type: user_metadata.user_type,
+      user_id: decoded.sub || decoded.subject || "",
+      email: decoded.email || decoded.user_metadata?.email || "",
+      name: decoded.user_metadata?.nome || "",
+      user_type: decoded.user_type || decoded.user_metadata?.user_type || "admin",
       token,
     });
   };
@@ -32,12 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const decoded = jwtDecode<AuthTokenPayload>(token);
         if (Date.now() >= decoded.exp * 1000) return logout();
-        const { sub, email, user_metadata } = decoded;
         setUser({
-          user_id: sub,
-          email,
-          name: user_metadata.nome,
-          user_type: user_metadata.user_type,
+          user_id: decoded.sub || decoded.subject || "",
+          email: decoded.email || decoded.user_metadata?.email || "",
+          name: decoded.user_metadata?.nome || "",
+          user_type: decoded.user_type || decoded.user_metadata?.user_type || "admin",
           token,
         });
       } catch {
