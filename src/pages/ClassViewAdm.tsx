@@ -81,44 +81,116 @@ export default function ClassView() {
     };
 
     const exportToPDF = () => {
-        try {
-            const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.width;
-            const pageHeight = doc.internal.pageSize.height;
-            const margin = 14;
-            let currentY = 20;
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+        const pageHeight = doc.internal.pageSize.height;
+        const margin = 14;
+        const lineHeight = 6;
+        let currentY = 20;
 
-            doc.setFontSize(16);
-            doc.text('Relatório de Turmas', margin, currentY);
-            currentY += 10;
-            
-            doc.setFontSize(10);
-            doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, margin, currentY);
-            currentY += 15;
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Relatório de Turmas', margin, currentY);
 
-            turmasFiltradas.forEach((turma) => {
-                const linha = [
-                    String(turma.sigla || ''),
-                    String(turma.dia_semana || ''),
-                    `${turma.horario_inicio || ''} - ${turma.horario_fim || ''}`,
-                    String(turma.local || ''),
-                    String(turma.modalidade || ''),
-                    String(turma.limite_inscritos || '0')
-                ];
-                
-                doc.text(linha.join(" | "), margin, currentY);
-                currentY += 10;
+        currentY += 10;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Data de geração: ${new Date().toLocaleDateString()}`, margin, currentY);
 
-                if (currentY >= pageHeight - 20) {
-                    doc.addPage();
-                    currentY = 20;
-                }
+        currentY += 15;
+        const columnWidths = [25, 20, 35, 40, 25, 20];
+        const headers = ["Sigla", "Dia", "Horário", "Local", "Modalidade", "Limite"];
+
+        const columnPositions = [margin];
+        for (let i = 0; i < columnWidths.length - 1; i++) {
+            columnPositions.push(columnPositions[i] + columnWidths[i]);
+        }
+
+        doc.setFillColor(66, 66, 66);
+        doc.rect(margin, currentY - 4, pageWidth - 2 * margin, 8, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+
+        headers.forEach((header, index) => {
+            doc.text(header, columnPositions[index] + 2, currentY);
+        });
+
+        currentY += 6;
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, currentY, pageWidth - margin, currentY);
+        currentY += 2;
+
+        (turmasFiltradas ?? []).forEach((turma, rowIndex) => {
+            if (currentY > pageHeight - 30) {
+                doc.addPage();
+                currentY = 20;
+            }
+
+            const rowData = [
+                turma.sigla || '',
+                turma.dia_semana || '',
+                `${turma.horario_inicio || ''} - ${turma.horario_fim || ''}`,
+                turma.local || '',
+                turma.modalidade || '',
+                turma.limite_inscritos?.toString() || '0'
+            ];
+
+            let maxLines = 1;
+            const textLines: string[][] = [];
+
+            rowData.forEach((data, colIndex) => {
+                const lines = doc.splitTextToSize(String(data), columnWidths[colIndex] - 4);
+                textLines.push(lines);
+                maxLines = Math.max(maxLines, lines.length);
             });
 
-            doc.save(`turmas.pdf`);
-        } catch (e) {
-            alert("Não foi possível gerar o PDF no momento.");
+            const rowHeight = maxLines * lineHeight;
+
+            if (rowIndex % 2 === 0) {
+                doc.setFillColor(248, 248, 248);
+                doc.rect(margin, currentY - 1, pageWidth - 2 * margin, rowHeight, 'F');
+            }
+
+            textLines.forEach((lines, colIndex) => {
+                lines.forEach((line, lineIndex) => {
+                    doc.text(line, columnPositions[colIndex] + 2, currentY + 4 + (lineIndex * lineHeight));
+                });
+            });
+
+            doc.setDrawColor(220, 220, 220);
+            columnPositions.forEach(pos => {
+                doc.line(pos, currentY - 1, pos, currentY + rowHeight - 1);
+            });
+            doc.line(pageWidth - margin, currentY - 1, pageWidth - margin, currentY + rowHeight - 1);
+
+            doc.line(margin, currentY + rowHeight - 1, pageWidth - margin, currentY + rowHeight - 1);
+
+            currentY += rowHeight;
+        });
+
+        currentY += 10;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text(`Total de turmas: ${(turmasFiltradas ?? []).length}`, margin, currentY);
+
+        const totalPages = doc.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.text(
+                `Página ${i} de ${totalPages}`,
+                pageWidth - margin - 20,
+                pageHeight - 10
+            );
         }
+
+        doc.save(`turmas-${new Date()}`);
     };
 
     if (loading) {
