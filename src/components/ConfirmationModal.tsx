@@ -7,13 +7,11 @@ interface ConfirmationModalProps {
   onClose: () => void;
   onConfirm: () => void;
   data: {
-    sigla: string;
-    professor?: string;
+    modalidade: string;
     local: string;
-    dia_semana: string;
     horario_inicio: string;
     horario_fim: string;
-    limite_inscritos: number;
+    limite: number;
   };
 }
 
@@ -31,13 +29,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
           &times;
         </button>
 
-        <h2 className="text-2xl font-bold mb-4 text-center text-[#43054E]">{data.sigla} - A</h2> 
+        <h2 className="text-2xl font-bold mb-4 text-center text-[#43054E]">{data.modalidade}</h2> 
         <div className="space-y-2 mb-8 mt-8">
-          <p>Asa Norte, {data.dia_semana} {data.horario_inicio} - {data.horario_fim} </p>
-          {data.professor && data.sigla?.toLowerCase() !== "nado livre" && (
-            <p><strong>Professor:</strong> {data.professor}</p>
-          )}
-          <p><strong>Limite de Alunos:</strong> {data.limite_inscritos}</p>
+          <p><b>Local:</b> Asa Norte, {data.local}</p>
+          <p><b>Horário:</b> {data.horario_inicio} - {data.horario_fim} </p>
+          <p><strong>Limite de Alunos:</strong> {data.limite}</p>
         </div>
         <div className="flex justify-center">
           <Button text="Confirmar" onClick={onConfirm} className="w-auto max-w-xs mx-auto" />
