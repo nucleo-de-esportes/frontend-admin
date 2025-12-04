@@ -1,4 +1,3 @@
-// ClassEdit.tsx
 import { useState, useEffect } from "react";
 import Button from "../components/Button";
 import Form from "../components/Form";
@@ -12,7 +11,6 @@ import dayjs, { Dayjs } from "dayjs";
 import "dayjs/locale/pt-br";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import ComboBox from "../components/ComboBox";
-import type { ComboBoxOption } from "../components/ComboBox";
 import NumberInput from "../components/NumberInput";
 import ConfirmationModal from "../components/ConfirmationModal";
 import DeletionModal from "../components/DeletionModal";
@@ -26,32 +24,6 @@ dayjs.locale("pt-br");
 dayjs.extend(customParseFormat);
 
 const ClassEdit = () => {
-  useEffect(() => {
-    axios.get("/cad/mod").then((response) => {
-      const formatted = response.data.map(
-        (mod: { modalidade_id: number; nome: string }) => ({
-          value: mod.modalidade_id,
-          label: mod.nome,
-        })
-      );
-      setModalidadeOptions(formatted);
-      setModalidadesCarregadas(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    axios.get("/cad/local").then((response) => {
-      const formatted = response.data.map(
-        (loc: { local_id: number; nome: string }) => ({
-          value: loc.local_id,
-          label: loc.nome,
-        })
-      );
-      setLocalOptions(formatted);
-      setLocaisCarregados(true);
-    });
-  }, []);
-
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<Dayjs | null>(null);
@@ -89,6 +61,32 @@ const ClassEdit = () => {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    axios.get("/cad/mod").then((response) => {
+      const formatted = response.data.map(
+        (mod: { modalidade_id: number; nome: string }) => ({
+          value: mod.modalidade_id,
+          label: mod.nome,
+        })
+      );
+      setModalidadeOptions(formatted);
+      setModalidadesCarregadas(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    axios.get("/cad/local").then((response) => {
+      const formatted = response.data.map(
+        (loc: { local_id: number; nome: string }) => ({
+          value: loc.local_id,
+          label: loc.nome,
+        })
+      );
+      setLocalOptions(formatted);
+      setLocaisCarregados(true);
+    });
+  }, []);
+
   const fetchTurmaData = async () => {
     setLoading(true);
     setError(null);
@@ -105,7 +103,7 @@ const ClassEdit = () => {
       });
       clearTimeout(timeout);
 
-        const turmaData = Array.isArray(response.data)
+      const turmaData = Array.isArray(response.data)
         ? response.data[0]
         : response.data;
 
@@ -192,7 +190,6 @@ const ClassEdit = () => {
         modalidade_id: selectedModalidade?.value,
       };
 
-      console.log("Tentando enviar json:", json);
       await axios.put(`/turmas/${id}`, json, {
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -325,7 +322,6 @@ const ClassEdit = () => {
             }
             onValueChange={(values) => {
               setLimite(values.value);
-              console.log(limite);
             }}
           />
         </div>
