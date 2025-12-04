@@ -105,7 +105,7 @@ const ClassEdit = () => {
       });
       clearTimeout(timeout);
 
-      const turmaData = Array.isArray(response.data)
+        const turmaData = Array.isArray(response.data)
         ? response.data[0]
         : response.data;
 
@@ -114,15 +114,18 @@ const ClassEdit = () => {
 
       setLimite(turmaData.limite_inscritos.toString());
 
+      const nomeModalidade = turmaData.modalidade?.nome || turmaData.modalidade || '';
+      const nomeLocal = turmaData.local?.nome || turmaData.local || '';
+
       setSelectedModalidade(
         modalidadeOptions.find(
-          (m) => m.label.toLowerCase() === String(turmaData.modalidade || '').toLowerCase()
+          (m) => m.label.toLowerCase() === String(nomeModalidade).toLowerCase()
         ) ?? null
       );
       
       setSelectedLocal(
         localOptions.find(
-          (l) => l.label.toLowerCase() === String(turmaData.local || '').toLowerCase()
+          (l) => l.label.toLowerCase() === String(nomeLocal).toLowerCase()
         ) ?? null
       );
 
@@ -185,7 +188,6 @@ const ClassEdit = () => {
         horario_inicio: startTime?.format("HH:mm"),
         horario_fim: endTime?.format("HH:mm"),
         limite_inscritos: parseInt(limite, 10),
-        sigla: selectedModalidade?.label,
         local_id: selectedLocal?.value,
         modalidade_id: selectedModalidade?.value,
       };
